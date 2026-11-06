@@ -1,0 +1,1800 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17202B">
+<title>Mô phỏng trạm thủy lực máy cán tôn · bản mobile</title>
+<style>
+:root{
+  --bg:#F3F4F2; --panel:#FFFFFF; --ink:#17202B; --muted:#4A5561; --line:#D6DADF; --soft:#EEF0F2;
+  --red:#C8372D; --org:#D9822B; --blu:#2C68B0; --grn:#2E8B57; --idl:#A7B0BA; --amb:#F2C230;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font-family:"Segoe UI","Be Vietnam Pro",Roboto,"Helvetica Neue",Arial,sans-serif;font-size:13px}
+.mono{font-family:Consolas,"JetBrains Mono","Cascadia Mono",ui-monospace,monospace}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 580px;grid-template-rows:auto minmax(0,1fr);height:100vh}
+header{grid-column:1/3;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;border-bottom:1px solid var(--line);background:#FFFFFF}
+header h1{font-size:17px;margin:0;font-weight:700}
+header .sp{flex:1}
+header .clock{font-size:12px;color:var(--muted)}
+.left{min-width:0;overflow:auto;padding:10px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.right{min-width:0;overflow:auto;border-left:1px solid var(--line);background:#FAFBFA;display:flex;flex-direction:column}
+.svgbox{background:#FFFFFF;border:1px solid var(--line);border-radius:10px;padding:4px}
+svg#sch{width:100%;height:auto;display:block}
+.chartbox{background:#FFFFFF;border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.chartbox canvas{width:100%;height:210px;display:block}
+.symbox{background:#FFFFFF;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.symbox h3,.card h3{font-size:14px;margin:0 0 8px 0}
+.sym{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;line-height:1.45;margin:3px 0}
+.dot{flex:0 0 9px;height:9px;border-radius:50%;margin-top:5px}
+.tabs{display:flex;gap:2px;padding:8px 10px 0;border-bottom:1px solid var(--line);background:#FFFFFF;position:sticky;top:0;z-index:2;flex-wrap:wrap}
+.tab{border:1px solid transparent;border-bottom:0;background:none;padding:8px 12px;font:inherit;font-weight:600;color:var(--muted);cursor:pointer;border-radius:8px 8px 0 0}
+.tab[aria-selected="true"]{background:#FAFBFA;border-color:var(--line);color:var(--ink);margin-bottom:-1px}
+.pane{padding:10px;display:none;flex-direction:column;gap:10px}
+.pane.on{display:flex}
+.card{background:#FFFFFF;border:1px solid var(--line);border-radius:10px;padding:12px}
+.row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.b{min-height:34px;padding:0 12px;border:1px solid var(--ink);background:#FFFFFF;color:var(--ink);font:inherit;font-weight:600;cursor:pointer;border-radius:6px}
+.b:hover{background:var(--soft)}
+.b:focus-visible,.tab:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--blu);outline-offset:2px}
+.b.on{background:var(--ink);color:#FFFFFF}
+.b.green{background:var(--grn);border-color:var(--grn);color:#FFFFFF}
+.b.red{background:var(--red);border-color:var(--red);color:#FFFFFF}
+.b.amber{background:var(--org);border-color:var(--org);color:#FFFFFF}
+.b.sm{min-height:30px;padding:0 9px;font-size:12px}
+.seg{display:inline-flex}
+.seg .b{border-radius:0}
+.seg .b:first-child{border-radius:6px 0 0 6px}
+.seg .b:last-child{border-radius:0 6px 6px 0}
+.seg .b+.b{border-left:0}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}
+.tile{border:1px solid #E1E4E8;border-radius:6px;padding:6px 8px;background:#FFFFFF}
+.tile .k{font-size:11px;color:var(--muted)}
+.tile .v{font-size:15px;font-weight:700}
+.tile.bad{background:#FBE9E7;border-color:#F0B9B2}
+.tile.bad .v{color:#9C2318}
+.st{border-top:1px solid var(--soft);padding-top:8px;margin-top:8px;display:flex;flex-direction:column;gap:6px}
+.st .ttl{font-weight:700}
+.muted{color:var(--muted)}
+table.t{width:100%;border-collapse:collapse;font-size:12px}
+table.t th{text-align:right;font-weight:600;color:var(--muted);border-bottom:1px solid var(--line);padding:4px 5px;font-size:11px}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t td{text-align:right;padding:4px 5px;border-bottom:1px solid var(--soft)}
+table.g{width:100%;border-collapse:collapse;font-size:12px}
+table.g th{text-align:left;font-size:11px;color:var(--muted);border-bottom:2px solid var(--ink);padding:5px}
+table.g td{vertical-align:top;padding:5px;border-bottom:1px solid var(--soft);line-height:1.4}
+.chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.chip{text-align:left;min-height:32px;padding:5px 8px;border:1px solid #C9CED4;background:#FFFFFF;border-radius:6px;font:inherit;font-size:12px;font-weight:600;cursor:pointer;color:var(--ink)}
+.chip.on{background:#FBE9E7;border-color:var(--red);color:#8E2219}
+.zone{font-size:12px;font-weight:700;margin:10px 0 6px;color:var(--muted)}
+.form{display:grid;grid-template-columns:minmax(0,1.5fr) 110px 54px;gap:6px 8px;align-items:center;font-size:12.5px}
+.form input,.form select{width:100%;min-height:30px;border:1px solid #C9CED4;border-radius:5px;padding:2px 6px;font:inherit}
+.form .gt{grid-column:1/4;font-weight:700;margin-top:8px;border-bottom:1px solid var(--line);padding-bottom:3px}
+.as{color:#9A4A0E;font-size:10.5px;font-weight:700;background:#FEF3C7;padding:1px 4px;border-radius:3px}
+.ok-tag{color:#1B6535;font-size:10.5px;font-weight:700;background:#DCFCE7;padding:1px 4px;border-radius:3px}
+select.inp{min-height:32px;border:1px solid #C9CED4;border-radius:5px;padding:2px 6px;font:inherit;background:#FFFFFF}
+.big{font-size:20px;font-weight:700}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);margin:4px 2px 0}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{display:inline-block;width:14px;height:5px;border-radius:2px}
+.note{font-size:11.5px;color:var(--muted);line-height:1.45}
+.warn{color:#9C2318;font-weight:600}
+.info-box{background:#F0F6FF;border:1px solid #B9D4F8;border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.48;color:#17202B;margin-top:8px}
+.info-box b{color:#1A4B8C}
+.warn-box{background:#FFF8EB;border:1px solid #F3C677;border-radius:8px;padding:9px 11px;font-size:12px;line-height:1.48;color:#17202B}
+.ex-banner{margin:8px 10px 0;background:#FFFDF7;border:2px solid var(--blu);border-radius:10px;padding:10px 12px;display:none;flex-direction:column;gap:8px;box-shadow:0 2px 6px rgba(0,0,0,0.05)}
+.ex-banner.on{display:flex}
+.ex-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.ex-title{font-weight:700;font-size:13.5px;color:var(--blu)}
+.chk-list{display:flex;flex-direction:column;gap:6px;margin:4px 0}
+.chk-item{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border:1px solid #D6DADF;border-radius:6px;background:#FFFFFF;font-size:12px;line-height:1.42;cursor:pointer}
+.chk-item.done{background:#F1F9F4;border-color:#86EFAC}
+.chk-item input[type="checkbox"]{margin-top:2px;flex:0 0 15px;height:15px;cursor:pointer}
+.chk-auto{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 5px;border-radius:4px;margin-left:4px;background:#EEF0F2;color:#4A5561}
+.chk-auto.ok{background:#DCFCE7;color:#166534}
+.ex-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin:8px 0}
+.ex-btn{text-align:left;padding:8px 10px;border:1.5px solid var(--blu);background:#F5F9FF;border-radius:8px;cursor:pointer;font:inherit;transition:background .15s}
+.ex-btn:hover{background:#E6F0FF}
+.ex-btn.on{background:var(--blu);color:#FFFFFF}
+.ex-btn .et{font-weight:700;font-size:12.5px;display:block;margin-bottom:2px}
+.ex-btn .ed{font-size:11px;opacity:0.88;display:block;line-height:1.35}
+.b:disabled{opacity:0.45;cursor:not-allowed;background:#EEF0F2;border-color:#C9CED4;color:#6C7783}
+.cal-grid{display:grid;grid-template-columns:minmax(0,1.6fr) 95px 50px;gap:6px 8px;align-items:center;font-size:12px;margin-top:6px}
+.cal-grid input{width:100%;min-height:28px;border:1px solid #C9CED4;border-radius:5px;padding:2px 6px;font:inherit}
+.svg-hit{cursor:pointer;transition:opacity .12s}
+.svg-hit:hover{opacity:0.82}
+.meas-hint{font-size:10.5px;color:#7A5200;background:#FEF3C7;padding:1px 5px;border-radius:4px;font-family:"Segoe UI",Arial,sans-serif;display:inline-block}
+.meas-ok{font-weight:700;color:#166534;background:#DCFCE7;padding:1px 5px;border-radius:4px}
+.meas-bad{font-weight:700;color:#9C2318;background:#FBE9E7;padding:1px 5px;border-radius:4px}
+@media (max-width:1250px){.app{grid-template-columns:1fr;grid-template-rows:auto auto auto;height:auto}.right{border-left:0;border-top:1px solid var(--line)}header{grid-column:1}}
+
+/* ================= BẢN MOBILE v4 (chỉ giao diện, không đổi lõi vật lý và tính năng v4) ================= */
+html,body{overflow-x:hidden}
+button,input,select{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.svgtools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.svgtools .lbl{font-size:12px;font-weight:700;color:var(--muted);margin-right:2px}
+.svgtools .b{min-height:34px}
+.svgtools .b.on{background:var(--blu);border-color:var(--blu);color:#fff}
+.svgbox{overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior:contain}
+.svgbox svg{max-width:none}
+.mbar{display:none}
+@media (max-width:1250px){
+  .app{grid-template-columns:1fr}
+  .svgbox{max-height:62vh}
+}
+@media (max-width:768px){
+  body{font-size:14px}
+  header{padding:10px 12px;gap:8px}
+  header h1{font-size:15px;line-height:1.35}
+  header label.muted{flex:1 1 46%}
+  header select.inp{width:100%}
+  .left{padding:8px 8px 12px}
+  .right .pane{padding:8px}
+  .card{padding:10px}
+  .b{min-height:44px;padding:0 14px}
+  .b.sm{min-height:40px;padding:0 12px}
+  .tab{padding:12px 14px;font-size:14px}
+  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .tabs .tab{flex:0 0 auto}
+  select.inp{min-height:44px}
+  .form input,.form select{min-height:44px;font-size:16px}
+  .form{grid-template-columns:minmax(0,1fr) 64px}
+  .form label{grid-column:1/3}
+  .form .gt{grid-column:1/3}
+  .kv{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .tile .v{font-size:16px}
+  .chips{grid-template-columns:minmax(0,1fr)}
+  .chip{min-height:44px;padding:8px 10px;font-size:13px}
+  .card{overflow-x:auto}
+  table.t,table.g{min-width:560px}
+  table.t th,table.t td,table.g th,table.g td{font-size:12.5px}
+  .chartbox canvas{height:180px}
+  .symbox h3,.card h3{font-size:15px}
+  /* tính năng mới của v4 */
+  .ex-grid{grid-template-columns:minmax(0,1fr)}
+  .ex-btn{min-height:44px;padding:10px 12px}
+  .ex-banner{margin:8px 8px 0;padding:10px}
+  .chk-item{min-height:44px;padding:8px 10px}
+  .chk-item input[type="checkbox"]{width:20px;height:20px}
+  .cal-grid{grid-template-columns:minmax(0,1fr) 64px}
+  .cal-grid label{grid-column:1/3}
+  .cal-grid input{min-height:44px;font-size:16px}
+  .info-box,.warn-box{font-size:13px}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;
+    align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
+    background:rgba(23,32,43,.97);color:#fff;box-shadow:0 -2px 12px rgba(0,0,0,.25)}
+  .mbar .p0{flex:0 0 auto;font-family:Consolas,monospace;font-size:13px;line-height:1.2;text-align:center}
+  .mbar .p0 b{display:block;font-size:17px}
+  .mbar .b{flex:1 1 0;min-height:44px;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#fff}
+  .mbar .b.green{background:var(--grn);border-color:var(--grn)}
+  .mbar .b.red{background:var(--red);border-color:var(--red)}
+  .mbar .b.on{background:#fff;color:#17202B}
+}
+@media (max-width:380px){
+  .kv{grid-template-columns:minmax(0,1fr)}
+  header label.muted{flex:1 1 100%}
+}
+@media (pointer:coarse) and (min-width:769px){
+  .b{min-height:40px}
+  .b.sm{min-height:36px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>Mô phỏng trạm thủy lực máy cán tôn · 1 bơm · DBW · 3 van 4/3 · 3 xi lanh</h1>
+  <span class="sp"></span>
+  <span class="clock mono" id="clock">t = 0,0 s</span>
+  <label class="muted">Tốc độ thủy lực
+    <select id="selSpeed" class="inp"><option value="0.1">×0,1 (chậm)</option><option value="0.25">×0,25</option><option value="1" selected>×1 thực</option></select></label>
+  <label class="muted">Thời gian nhiệt
+    <select id="selTherm" class="inp"><option value="1">×1 thực</option><option value="30" selected>×30</option><option value="120">×120</option><option value="600">×600</option></select></label>
+  <button class="b sm" id="bPause">Tạm dừng</button>
+  <button class="b sm" id="bReset">Đặt lại</button>
+</header>
+
+<div class="left">
+  <div class="svgbox" id="svgbox">
+  <div class="svgtools" role="group" aria-label="Thu phóng sơ đồ">
+    <span class="lbl">Sơ đồ:</span>
+    <button class="b sm" id="zOut" type="button" aria-label="Thu nhỏ sơ đồ">−</button>
+    <button class="b sm" id="zIn" type="button" aria-label="Phóng to sơ đồ">+</button>
+    <button class="b sm" id="zFit" type="button">Vừa màn hình</button>
+    <button class="b sm" id="zAll" type="button">Toàn cảnh</button>
+    <button class="b sm" data-focus="0" type="button">XL1</button>
+    <button class="b sm" data-focus="1" type="button">XL2</button>
+    <button class="b sm" data-focus="2" type="button">XL3</button>
+  </div>
+  <svg id="sch" viewBox="0 0 1320 940" role="img" aria-label="Sơ đồ thủy lực trạm máy cán"></svg></div>
+  <div class="legend" id="legend"></div>
+  <div class="chartbox">
+    <div class="row" style="justify-content:space-between">
+      <b>Đồ thị áp 10 s</b>
+      <div class="row">
+        <label class="muted">Trạm <select id="selChartSt" class="inp"><option value="0">1</option><option value="1">2</option><option value="2">3</option></select></label>
+        <button class="b sm" id="bSaveRef" title="Lưu đường đồ thị hiện tại làm đường chuẩn nét đứt mờ để so sánh với khi có lỗi">📌 Lưu đường chuẩn</button>
+        <button class="b sm" id="bClearRef" style="display:none">Xóa chuẩn</button>
+        <button class="b sm" id="bChartPause">Dừng đồ thị</button>
+      </div>
+    </div>
+    <canvas id="chart"></canvas>
+    <div class="legend" id="chartLegend"></div>
+  </div>
+  <div class="symbox"><h3>Triệu chứng quan sát được (không nêu nguyên nhân)</h3><div id="sym"></div></div>
+</div>
+
+<div class="right">
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" data-p="pOp">Vận hành</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="pMeas">Đo kiểm</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="pFault">Khoanh vùng &amp; Lỗi</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="pPar">Thông số</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="pDiag">Bảng tra</button>
+  </div>
+
+  <div class="ex-banner" id="exBanner">
+    <div class="ex-head">
+      <span class="ex-title" id="exTitle">Khoanh vùng nhanh theo triệu chứng</span>
+      <button class="b sm" id="bExClose">Đóng bảng khoanh vùng</button>
+    </div>
+    <div class="note" id="exDesc" style="color:#17202B"></div>
+    <div id="exSimBar" style="background:#EEF4FF;border:1px solid #B9D4F8;border-radius:6px;padding:6px 8px;font-size:11.5px"></div>
+    <div class="chk-list" id="exChecks"></div>
+  </div>
+
+  <div class="pane on" id="pOp">
+    <section class="card">
+      <h3>Motor &amp; an toàn</h3>
+      <div class="row">
+        <button class="b green" id="bStart">I · Khởi động</button>
+        <button class="b" id="bStop">O · Dừng</button>
+        <button class="b red" id="bEstop">DỪNG KHẨN</button>
+        <button class="b" id="bOl">Reset rơ-le nhiệt</button>
+      </div>
+      <div class="kv" id="motorKv"></div>
+    </section>
+    <section class="card">
+      <h3>Van an toàn điện từ xả tải (DBW) · coil YV0</h3>
+      <div class="row">
+        <span class="muted">Núm chỉnh</span>
+        <button class="b sm" data-knob="-5">−5</button><button class="b sm" data-knob="-1">−1</button>
+        <span class="mono big" id="knobTxt" style="min-width:96px;text-align:center">140 bar</span>
+        <button class="b sm" data-knob="1">+1</button><button class="b sm" data-knob="5">+5</button>
+        <span class="muted mono" id="knobTurn"></span>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="b" id="bPin">Giữ để ấn chốt tay coil</button>
+        <label><input type="checkbox" id="cPinLock"> khóa chốt</label>
+        <label style="margin-left:8px"><input type="checkbox" id="cIso" checked> van khóa đồng hồ P0 mở</label>
+      </div>
+      <div class="kv" id="dbwKv"></div>
+      <div class="info-box" id="dbwNote">
+        <b>Lưu ý tại sao P0 lúc lùi / chạm cuối hành trình cao hơn núm chỉnh (140 bar):</b><br>
+        • <b>Khi bình thường (P0 ≈ 147 bar):</b> 140 bar là <i>áp bắt đầu mở</i>. Khi xi lanh chạm cuối hành trình (lùi hoặc tiến) hay khóa VB, toàn bộ lưu lượng bơm (~16,6 L/ph) xả qua DBW gây <b>quá áp dòng chảy (~6,7 bar)</b> + <b>áp đường hồi MT (~0,5 bar)</b> → P0 đạt ~147 bar (van hoàn toàn bình thường, không phải hỏng).<br>
+        • <b>Khi nghẹt đường hồi (P0 lúc lùi vọt lên ~180–181 bar):</b> Khi cổng T (và xả pilot nội) của DBW đấu chung vào đường hồi trước chỗ nghẹt, <b>áp lưng MT (~34–40 bar) cộng trực tiếp 1:1 vào áp mở van an toàn</b> (140 + 7 + 34 ≈ 181 bar). Ngoài ra trong lúc đang lùi, khoang đáy A (diện tích lớn) đẩy dầu về đường hồi gấp Ac/Ar = 1,33 lần lưu lượng bơm và áp lưng P_A bị nhân hệ số 1,33 sang phía ty B (P0 đang lùi ~106 bar, MT ~65 bar).
+      </div>
+    </section>
+    <section class="card">
+      <h3>Tay gạt van · van bi cô lập · chạy chu kỳ tự động</h3>
+      <div class="row" style="margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--soft)">
+        <button class="b green sm" id="bAuto1">▶ Chu kỳ tự động: Nhấn XL3 + Cắt đầu XL1</button>
+        <button class="b green sm" id="bAuto2">▶ Chu kỳ tự động: Nhấn XL3 + Cắt đuôi XL2</button>
+        <button class="b sm" id="bAutoStop" style="display:none">⏹ Dừng chu kỳ</button>
+        <span class="mono" id="autoTxt" style="font-size:11.5px;color:var(--blu);font-weight:700"></span>
+      </div>
+      <div id="stations"></div>
+      <div class="note" style="margin-top:8px">Xi lanh lắp đứng, đầu cán hướng xuống. TIẾN = dao/đầu nhấn đi xuống; LÙI = kéo lên. Tay gạt có khấc giữ: bấm là van giữ nguyên vị trí. <b>Có thể bấm trực tiếp vào van V1–V3, VB1–VB3, Motor, chốt DBW và các điểm đo MP/MG/MT/MR/MA/MB ngay trên sơ đồ SVG bên trái.</b></div>
+    </section>
+    <section class="card">
+      <h3>Tôn đang chạy</h3>
+      <div class="row">
+        <label>Độ dày <select id="selT" class="inp"><option>0.30</option><option>0.35</option><option>0.40</option><option selected>0.45</option><option>0.50</option><option>0.60</option></select> mm</label>
+        <label>Mác thép <select id="selGrade" class="inp"><option>G550</option><option>G350</option><option>G300</option></select></label>
+      </div>
+      <div class="note" id="cutInfo" style="margin-top:6px"></div>
+    </section>
+  </div>
+
+  <div class="pane" id="pMeas">
+    <section class="card"><h3>Đồng hồ &amp; cảm biến trên máy</h3><div class="kv" id="measKv"></div></section>
+    <section class="card">
+      <h3>Đồng hồ áp cầm tay (cắm test point, có giữ đỉnh)</h3>
+      <div class="row">
+        <select id="selTp" class="inp"></select>
+        <button class="b sm" id="bPeak">Xóa đỉnh</button>
+      </div>
+      <div class="kv"><div class="tile"><div class="k">Giá trị</div><div class="v mono" id="tpVal">0,0 bar</div></div><div class="tile"><div class="k">Đỉnh</div><div class="v mono" id="tpPeak">0,0 bar</div></div><div class="tile"><div class="k">Thấp nhất</div><div class="v mono" id="tpMin">0,0 bar</div></div></div>
+    </section>
+    <section class="card">
+      <h3>Đồng hồ vạn năng / ampe kìm</h3>
+      <div class="row"><select id="selMm" class="inp">
+        <option value="plug">V DC tại giắc coil YV0</option>
+        <option value="coil">Ω coil YV0 (đã rút giắc)</option>
+        <option value="psu">V DC nguồn 24 V tủ điện</option>
+        <option value="amp">A ampe kìm dây motor</option>
+      </select><span class="mono big" id="mmVal" style="margin-left:10px">—</span></div>
+    </section>
+    <section class="card">
+      <h3>Lưu lượng kế (lắp tạm khi thử)</h3>
+      <div class="kv" id="flowKv"></div>
+    </section>
+    <section class="card">
+      <h3>Từng trạm · Đo rò piston (Bypass) &amp; Rò trong van</h3>
+      <table class="t mono" id="stTable"></table>
+      <div class="info-box" style="margin-top:8px">
+        <b>⚡ Thiết lập nhanh tư thế đo rò (để đọc ngay cột Rò piston / Rò trong van):</b>
+        <div class="row" style="margin-top:6px">
+          <button class="b sm" data-qtest="byp" data-st="0">Đo Bypass Piston XL1</button>
+          <button class="b sm" data-qtest="byp" data-st="1">Đo Bypass Piston XL2</button>
+          <button class="b sm" data-qtest="byp" data-st="2">Đo Bypass Piston XL3</button>
+          <button class="b sm" data-qtest="vlv">Đo Rò trong Van V1–V3 (Khóa VB + Chốt coil)</button>
+          <button class="b sm" data-qtest="norm">↺ Về trạng thái bình thường</button>
+        </div>
+      </div>
+      <div class="note" style="margin-top:6px">• <b>Điều kiện đọc Rò piston (bypass test, chuẩn &lt; 0,2 L/ph):</b> Motor chạy, VB mở, xi lanh đã chạm kịch cuối hành trình (0 hoặc 250 mm) và <b>vẫn giữ tay gạt</b> để ép áp vào 1 buồng, đo dầu lọt qua phớt sang cổng đối diện.<br>• <b>Điều kiện đọc Rò trong van (chuẩn &lt; 0,1 L/ph):</b> Motor chạy, tay gạt ở <b>GIỮA</b>, <b>khóa VB</b> để cô lập xi lanh, <b>khóa chốt tay coil YV0</b> để đường P có áp cao (~147 bar), hứng dầu rò qua khe con trượt ra cổng A/B.</div>
+    </section>
+  </div>
+
+  <div class="pane" id="pFault">
+    <section class="card">
+      <h3>⚡ Chẩn đoán nhanh theo triệu chứng ngoài máy (6 hiện tượng thực tế)</h3>
+      <div class="note">Máy thật ngoài xưởng đang gặp hiện tượng nào, hãy bấm vào nhóm đó bên dưới: hệ thống sẽ mở ngay <b>phác đồ đo loại trừ 3 bước</b>, kèm <b>quy tắc kết luận trực tiếp</b> và nút <b>bấm thử từng lỗi nghi ngờ trên sim</b> để đối chiếu số đo thực tế.</div>
+      <div class="ex-grid">
+        <button class="ex-btn" data-ex="exIdle">
+          <span class="et">1 · Áp nghỉ cao (~45–46 bar)</span>
+          <span class="ed">Không gạt van mà P0 đã ~45–46 bar (chuẩn ~6,3 bar). Loại trừ nhanh: Lệch kim P0 / Nghẹt hồi / DBW xả không hết.</span>
+        </button>
+        <button class="ex-btn" data-ex="exDrift">
+          <span class="et">2 · Dao tự trôi xuống</span>
+          <span class="ed">Tay gạt ở GIỮA nhưng dao tự trôi (~26–30 mm/ph). Khóa VB &amp; đo bypass tách ngay: Rò van V2 / Phớt piston XL1 / Xước nòng.</span>
+        </button>
+        <button class="ex-btn" data-ex="exNoP">
+          <span class="et">3 · Không lên áp cắt (~4–6 bar)</span>
+          <span class="ed">Gạt van nhưng P0 chỉ ~4–6 bar. Nhìn đèn PLC X/Y0, LED giắc và ấn chốt tay coil tách ngay lỗi Điện / Coil / Kẹt pilot DBW.</span>
+        </button>
+        <button class="ex-btn" data-ex="exCut">
+          <span class="et">4 · Dao kẹt / không đứt / cắt chậm</span>
+          <span class="ed">Dao kẹt ở tôn hoặc chạy chậm. So áp P0, VAC và áp đỉnh XL1/XL2 tách ngay: Lò xo DBW yếu / Dao cùn / Bơm mòn / Tắc lọc hút.</span>
+        </button>
+        <button class="ex-btn" data-ex="exHot">
+          <span class="et">5 · Dầu nóng nhanh / Nhảy nhiệt OL</span>
+          <span class="ed">Dầu &gt; 60 °C hoặc nhảy OL. Đo dòng A, áp nghỉ P0/MT và ΔPf lọc hồi tách ngay: OL đặt thấp / Xả tải kẹt / Nghẹt hồi / Tắc lọc.</span>
+        </button>
+        <button class="ex-btn" data-ex="exMove">
+          <span class="et">6 · Chạy giật / nhún / tự nhả gạt</span>
+          <span class="ed">Xi lanh chạy giật, nặng dần về cuối, nhún trễ khi chạm tôn hoặc tự nhảy gạt về GIỮA. Tách ngay: Khấc V3 / Lọt khí / Cong ty / Kẹt dẫn hướng.</span>
+        </button>
+      </div>
+    </section>
+    <section class="card" id="faultDetail" style="display:none"></section>
+    <section class="card">
+      <h3>Mô phỏng đối chiếu từng lỗi cụ thể (26 lỗi theo 8 vùng)</h3>
+      <div class="note" id="faultMode">Bấm vào lỗi bất kỳ để bật/tắt và xem ngay số đo đặc trưng trên sơ đồ &amp; đồ thị (có thể bật nhiều lỗi cùng lúc).</div>
+      <div class="row" style="margin:8px 0">
+        <button class="b green sm" id="bSetupFault" title="Tự động khởi động motor và đưa van/xi lanh vào tư thế thấy rõ triệu chứng của lỗi đang chọn">▶ Dựng tư thế thấy rõ lỗi đang bật</button>
+        <button class="b sm" id="bClear">↺ Xóa hết lỗi (về máy chuẩn)</button>
+        <button class="b sm" id="bRand" title="Dùng khi muốn tự kiểm tra kỹ năng dò lỗi mù">🎲 Thử dò lỗi ẩn</button>
+        <button class="b sm" id="bReveal" style="display:none">Hiện tên lỗi ẩn</button>
+      </div>
+      <div id="faultList"></div>
+    </section>
+  </div>
+
+  <div class="pane" id="pPar">
+    <section class="card">
+      <h3>Hiệu chuẩn thông số theo máy thực tế để chẩn đoán chính xác</h3>
+      <div class="warn-box" id="parSurveyWarn">
+        <b>Lưu ý trước khi đối chiếu áp &amp; tốc độ với máy thật:</b> Các thông số mặc định gồm <b>Bơm 12 cc/v</b>, <b>Xi lanh 80/40×250 mm</b>, <b>Dao 180 kg</b>, <b>Lực cắt quy chiếu 38 kN</b>, <b>Áp tuần hoàn 3,5 bar</b> đang là <b>giả định (<span class="as">GĐ</span>)</b>. Chỉ cần khác đường kính xi lanh (bore) hoặc lưu lượng bơm là <b>tốc độ, áp cắt và thời gian chu kỳ sẽ khác theo</b>.<br>
+        👉 Hãy nhập nhãn máy hoặc dùng <b>Công cụ quy đổi nhanh từ số đo thực tế</b> bên dưới để khớp 1:1 với máy tại xưởng.
+      </div>
+      <details style="margin-top:8px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:#FAFBFC">
+        <summary style="cursor:pointer;font-weight:700;font-size:12.5px;color:var(--blu)">🛠 Công cụ quy đổi nhanh từ số đo thực tế trên máy (không cần tháo máy)</summary>
+        <div class="note" style="margin-top:6px">Đo trực tiếp trên máy thật bằng thước, đồng hồ bấm giây và đồng hồ áp suất, nhập vào đây để tính ngược ra thông số mô hình:</div>
+        <div class="cal-grid">
+          <label for="cal_bore">1. Đường kính trong xi lanh (bore) &amp; ty (rod)</label>
+          <div class="row" style="flex-wrap:nowrap"><input id="cal_bore" type="number" value="80" min="32" max="200"><span>/</span><input id="cal_rod" type="number" value="40" min="16" max="140"></div>
+          <span class="muted">mm</span>
+          <label for="cal_stroke">2. Hành trình xi lanh (stroke)</label>
+          <input id="cal_stroke" type="number" value="250" min="50" max="600">
+          <span class="muted">mm</span>
+          <label for="cal_tExt">3. Thời gian LÙI hết hành trình (kéo dao lên, không tải) – không dùng thời gian tiến vì trọng lượng dao kéo nhanh hơn lưu lượng bơm</label>
+          <input id="cal_tExt" type="number" value="3.2" min="0.5" max="30" step="0.1">
+          <span class="muted">giây</span>
+          <label for="cal_pHold">4. Áp phía ty (MB) khi dao treo tĩnh ở GIỮA</label>
+          <input id="cal_pHold" type="number" value="4.7" min="0.5" max="120" step="0.1">
+          <span class="muted">bar</span>
+          <label for="cal_pCut">5. Áp đỉnh phía đáy (MA) khi cắt tôn 0,45 G550</label>
+          <input id="cal_pCut" type="number" value="76" min="15" max="220" step="1">
+          <span class="muted">bar</span>
+          <label for="cal_pIdle">6. Áp P0 lúc máy chạy nghỉ (không gạt van)</label>
+          <input id="cal_pIdle" type="number" value="6.3" min="2" max="20" step="0.5">
+          <span class="muted">bar</span>
+        </div>
+        <div id="calPreview" class="info-box" style="margin-top:8px"></div>
+        <div class="row" style="margin-top:8px">
+          <button class="b green sm" id="bCalApply">Điền vào bảng thông số &amp; đánh dấu Đã đối chiếu (ĐĐC)</button>
+        </div>
+      </details>
+    </section>
+    <section class="card">
+      <h3>Thông số kỹ thuật (sửa theo nhãn máy rồi bấm Áp dụng)</h3>
+      <div class="note">Ô có dấu <span class="as">GĐ</span> là giá trị giả định; ô có dấu <span class="ok-tag">ĐĐC</span> là đã đối chiếu thực tế. Thông số được lưu trong trình duyệt này.</div>
+      <div class="form" id="parForm" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:10px">
+        <button class="b green" id="bApply">Áp dụng &amp; đặt lại</button>
+        <button class="b sm" id="bMarkVer">Đánh dấu tất cả Đã đối chiếu</button>
+        <button class="b sm" id="bDefault">Về mặc định (GĐ)</button>
+      </div>
+    </section>
+    <section class="card"><h3>Đặc tính tính ra</h3><table class="g" id="derived"></table><div id="parWarn" class="note" style="margin-top:8px"></div></section>
+  </div>
+
+  <div class="pane" id="pDiag">
+    <section class="card">
+      <h3>Quy trình khoanh vùng (chia đôi hệ thống)</h3>
+      <ol style="margin:0;padding-left:20px;line-height:1.55;font-size:12.5px">
+        <li><b>Quan sát 30 giây:</b> mắt thăm dầu, nhiệt độ, chỉ báo lọc hồi, rò ngoài, tiếng bơm, VAC, dòng motor, đèn PLC.</li>
+        <li><b>Áp nghỉ:</b> không gạt van, P0 phải 3–8 bar (chuẩn sim ≈ 6,3 bar). Cao hơn (~45–46 bar): tắt motor xem P0 về 0 (đồng hồ lệch kim dừng ở 40 bar) → bật lại đo MT (đường hồi) → cao (~39,5 bar): nghẹt hồi; thấp (~0,5 bar): DBW xả không hết.</li>
+        <li><b>Thử nguồn:</b> khóa VB một trạm, gạt van đó: P0 và G phải lên áp núm + 6–8 bar quá áp dòng chảy (núm 140 → P0 ≈ 147 bar). Chỉ ≈ 4–6 bar: dò X → Y0 → LED giắc → chốt tay coil. Lên ~62,5 bar rồi đứng: lò xo/bệ DBW yếu.</li>
+        <li><b>So trạm:</b> cả 3 xi lanh cùng lỗi → Nguồn/Điều áp/Hồi. Chỉ 1 trạm → van hoặc xi lanh trạm đó.</li>
+        <li><b>Tách van – xi lanh:</b> khóa VB, gạt van: G lên áp chỉ cho thấy dầu áp đã tới cổng đang đo (đường P thông, con trượt dịch chuyển được), <b>chưa</b> nói van kín. Đánh giá rò trong van: (a) VB mở, van ở GIỮA, xi lanh có trôi không; khóa VB mà hết trôi → rò ở van; (b) khóa chốt tay coil cho block giữ áp, van GIỮA, khóa VB, đo rò tại cổng A/B phía van &gt; 0,1 L/ph (khi mòn ≈ 4,1 L/ph) → van mòn. Phớt piston: bypass test &gt; 0,2 L/ph (khi hỏng ≈ 4,1 L/ph).</li>
+        <li><b>Cơ khí:</b> so áp đỉnh khi cắt giữa 2 dao (bình thường ~76 bar, dao cùn ~111 bar); xi lanh giật cục khi chạy không tải → dẫn hướng/ma sát.</li>
+      </ol>
+      <div class="note" style="margin-top:8px">Dao lắp ty hướng xuống: trọng lượng dao được đỡ bởi áp phía ty (B = m·g / diện tích vành; dao 180 kg ≈ 4,7 bar), phía đáy (A, G1 đo A) chỉ còn 0–3 bar là bình thường. Dao trôi xuống khi van ở GIỮA có thể do rò van <b>hoặc</b> rò phớt piston (dầu B lọt sang A, khoang A thiếu dầu thành chân không nhưng dao vẫn xuống). Phân biệt: khóa VB → hết trôi là van; vẫn trôi là phớt piston. Đo tốc độ trôi bằng mm/phút, không dựa vào số G1.</div>
+    </section>
+    <section class="card">
+      <h3>Bài trôi dao khi van ở GIỮA (ty hướng xuống)</h3>
+      <div class="note" style="font-size:12.5px;color:#17202B">Van con trượt luôn có khe hở nên luôn rò một ít. Với dao 180 kg, van tốt, tâm đóng, không van giữ tải: dao trôi ~0,2 mm/phút (~13 mm/giờ); dao 800 kg ~1 mm/phút. Thử lần lượt trong tab Thông số:<br>1) <b>Van giữ tải</b> + tâm đóng: vẫn trôi ~0,2 mm/phút vì dầu rò P→A tạo áp pilot mở van giữ tải.<br>2) <b>Van giữ tải</b> + <b>tâm A,B→T</b>: A xả về thùng, pilot = 0 → dao đứng yên. Đây là cách ghép chuẩn.<br>3) <b>Tâm A,B→T</b> mà không có van giữ tải: dao rơi tự do khi về GIỮA – không được dùng.<br>4) Bật lỗi <b>XL1 hỏng phớt piston</b>: dao trôi ~26–30 mm/phút (~0,44 mm/s) dù có van giữ tải hay khóa VB – chỉ thay phớt mới hết.<br>Bảo trì trong vùng dao luôn phải chèn/khóa cơ khí, không tin vào van.</div>
+    </section>
+    <section class="card">
+      <h3>Bài so sánh: cùng lỗi nghẹt đường hồi, hai cách đấu DBW</h3>
+      <div class="note" style="font-size:12.5px;color:#17202B">Bật lỗi <b>Đường hồi nghẹt</b>, đọc P0 lúc nghỉ và áp khi lùi. Sau đó vào tab Thông số đổi <b>Cổng T của DBW xả về</b> từ “qua lọc hồi” sang “thẳng về thùng”, bấm Áp dụng và đo lại. Cấu hình 1: áp nghỉ ~45,1 bar (MT ~39,5 bar) vì dầu xả tải phải đi qua đoạn nghẹt. Cấu hình 2: áp nghỉ ~6,3 bar vì dầu xả tải đi vòng qua đoạn nghẹt, nhưng lùi vẫn tốn áp (đang lùi P0 ~106 bar, chạm cuối hành trình lùi ~147 bar thay vì ~181 bar). Bài học: cùng một hư hỏng cho số đo khác nhau tùy sơ đồ đấu ống, nên phải biết đường đi của dầu trước khi kết luận. Kịch bản “áp nghỉ ~45 bar” chỉ chọn lỗi này khi DBW đang xả qua đường hồi.</div>
+    </section>
+    <section class="card">
+      <h3>Bài tập an toàn: dừng khẩn khi dao đang xuống</h3>
+      <div class="note" style="font-size:12.5px;color:#17202B">Dừng khẩn cắt motor và Y0 (DBW xả tải) nhưng <b>không</b> đưa tay gạt có khấc về giữa. Với dao lắp đứng và <b>không có van giữ tải</b>, đường B vẫn thông về thùng nên dao <b>rơi theo trọng lượng</b> tới khi chạm tôn. Nhả dừng khẩn rồi khởi động lại: nếu PLC không có khóa khởi động lại, Y0 có điện ngay và dao chạy tiếp theo lệnh cũ.<br><br>Thử trong tab Thông số: bật <b>Van giữ tải</b> → dao gần như đứng yên khi dừng khẩn (muốn giữ lâu dài phải dùng kèm van <b>tâm A,B→T</b>, xem bài trôi dao bên trên); bật <b>PLC khóa khởi động lại</b> → phải đưa mọi tay gạt về GIỮA mới có áp. Cả hai đang để giả định “không có”; cần đối chiếu sơ đồ điện và mạch thủy lực thực tế của máy.<br><br>Quy trình đề xuất: trước khi nhả dừng khẩn, đưa mọi tay gạt về GIỮA, chèn/khóa cơ khí cụm dao nếu cần vào vùng dao.</div>
+    </section>
+    <section class="card"><h3>Bảng lỗi: triệu chứng → kiểm tra xác nhận → xử lý</h3><table class="g" id="diagTable"></table></section>
+  </div>
+</div>
+</div>
+
+
+<div class="mbar" role="group" aria-label="Điều khiển nhanh">
+  <span class="p0">P0<b id="mP0">—</b></span>
+  <button class="b green" id="mStart" type="button">Khởi động</button>
+  <button class="b" id="mOp" type="button">Vận hành</button>
+  <button class="b red" id="mEstop" type="button">DỪNG KHẨN</button>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   HẰNG SỐ, THÔNG SỐ
+   ========================================================= */
+const BAR=1e5, LPM=60000, RHO=870, GRAV=9.81, PVAP=-0.9e5;
+const OILS={VG32:[32,5.4],VG46:[46,6.8],VG68:[68,8.7]};
+function visc(T,g){const o=OILS[g]||OILS.VG46;const L=x=>Math.log10(Math.log10(x+0.7));const a1=Math.log10(313.15),a2=Math.log10(373.15);const B=(L(o[0])-L(o[1]))/(a2-a1);const A=L(o[0])+B*a1;return Math.pow(10,Math.pow(10,A-B*Math.log10(Math.max(-10,T)+273.15)))-0.7;}
+const clamp=(x,a,b)=>x<a?a:(x>b?b:x);
+
+const DEF={
+  pumpCC:12, motorKW:5.5, motorRPM:1450, motorIn:11.4, olSet:11.5,
+  relSet:140, ventP:3.5, dbwDrain:'filter', offDelay:1.0,
+  bore:80, rod:40, stroke:250, massCut:180, massPress:60,
+  thr1:100, thr2:100, thr3:100,
+  tankL:80, oilL:68, oil:'VG46', ambient:32, kA:25, cooler:'no',
+  hoseID:9.5, hoseLen:1.5,
+  rearm:'no', cbv:'no', cbvSet:10, center:'closed',
+  sheetT:0.45, grade:'G550', cutRef:38, profH:25, cutX:140, pressX:230
+};
+const PARF=[
+  ['g','Bơm – motor'],
+  ['pumpCC','Lưu lượng riêng bơm bánh răng','cc/v',2,63,0.5,1],
+  ['motorKW','Công suất motor','kW',1.5,22,0.5,1],
+  ['motorRPM','Tốc độ định mức motor','v/ph',700,2950,5,1],
+  ['motorIn','Dòng định mức motor (380 V)','A',3,45,0.1,1],
+  ['olSet','Nấc chỉnh rơ-le nhiệt','A',2,50,0.1,1],
+  ['g','Van an toàn điện từ xả tải (DBW)'],
+  ['relSet','Áp đặt (núm)','bar',20,250,1,0],
+  ['ventP','Áp tuần hoàn khi xả tải (lò xo tầng chính)','bar',1,10,0.5,1],
+  ['dbwDrain','Cổng T của DBW xả về','',['filter','tank'],null,null,1],
+  ['offDelay','PLC trễ tắt Y0 sau khi nhả tay gạt','s',0,5,0.1,1],
+  ['g','An toàn – giữ tải (đối chiếu sơ đồ điện & thủy lực thực tế)'],
+  ['rearm','PLC khóa khởi động lại: mọi tay gạt về GIỮA mới cấp Y0','',['no','yes'],null,null,1],
+  ['cbv','Van giữ tải (counterbalance) đường B của 2 dao','',['no','yes'],null,null,1],
+  ['cbvSet','Áp mở van giữ tải (tỉ số pilot 3:1)','bar',5,60,1,1],
+  ['center','Kiểu tâm van V1–V3','',['closed','abt'],null,null,1],
+  ['g','Xi lanh (3 cái giống nhau)'],
+  ['bore','Đường kính piston','mm',32,200,1,0],
+  ['rod','Đường kính ty','mm',16,140,1,0],
+  ['stroke','Hành trình','mm',50,600,5,1],
+  ['massCut','Khối lượng cụm dao (mỗi dao)','kg',20,800,5,1],
+  ['massPress','Khối lượng cụm nhấn','kg',10,500,5,1],
+  ['thr1','Van tiết lưu đường B trạm 1 (100 = không có)','%',5,100,5,1],
+  ['thr2','Van tiết lưu đường B trạm 2','%',5,100,5,1],
+  ['thr3','Van tiết lưu đường B trạm 3','%',5,100,5,1],
+  ['g','Thùng – dầu – ống'],
+  ['tankL','Dung tích thùng','L',20,400,5,1],
+  ['oilL','Lượng dầu đang có','L',10,380,1,1],
+  ['oil','Cấp độ nhớt dầu','',['VG32','VG46','VG68'],null,null,0],
+  ['ambient','Nhiệt độ môi trường','°C',10,45,1,0],
+  ['kA','Hệ số tản nhiệt tự nhiên thùng','W/K',5,120,1,1],
+  ['cooler','Két làm mát gió (bật quạt > 45 °C)','',['no','yes'],null,null,1],
+  ['hoseID','Đường kính trong ống mềm A/B','mm',6,25,0.5,1],
+  ['hoseLen','Chiều dài ống mềm A/B','m',0.3,8,0.1,1],
+  ['g','Dao cắt – đầu nhấn'],
+  ['cutRef','Lực cắt quy chiếu (tôn 0,45 G550)','kN',5,150,1,1],
+  ['profH','Chiều cao sóng (đoạn dao ăn vào tôn)','mm',5,80,1,1],
+  ['cutX','Vị trí dao chạm tôn (từ đầu hành trình)','mm',10,400,1,1],
+  ['pressX','Vị trí đầu nhấn chạm tôn','mm',10,590,1,1]
+];
+let PAR=Object.assign({},DEF);
+let VER={};
+try{const sv=JSON.parse(localStorage.getItem('dmc_hyd_par')||'null'); if(sv) PAR=Object.assign({},DEF,sv);}catch(e){}
+try{const vr=JSON.parse(localStorage.getItem('dmc_hyd_ver')||'null'); if(vr) VER=vr;}catch(e){}
+const K={};
+function derive(){
+  const D=PAR;
+  K.Ac=Math.PI/4*Math.pow(D.bore/1000,2);
+  K.Ar=Math.max(1e-5,K.Ac-Math.PI/4*Math.pow(D.rod/1000,2));
+  K.L=D.stroke/1000;
+  K.Vp=D.pumpCC*1e-6;
+  K.nSync=D.motorRPM>2000?3000:(D.motorRPM>1200?1500:(D.motorRPM>850?1000:750));
+  K.slipR=Math.max(8,K.nSync-D.motorRPM);
+  K.Tr=D.motorKW*1000/(D.motorRPM*2*Math.PI/60);
+  K.Qr=K.Vp*D.motorRPM/60;
+  K.V0c=Math.PI/4*Math.pow(D.hoseID/1000,2)*D.hoseLen+0.03e-3;
+  K.Kv=5.5e-7*Math.max(1,Math.sqrt(K.Qr/2.9e-4)); // van NG6 ~3 bar ở 17 L/ph
+  K.Gpl0=0.05*K.Qr/140e5;
+  K.Gr=Math.max(K.Qr,2.9e-4)/7e5; K.Gv=Math.max(K.Qr,2.9e-4)/2.2e5;
+  K.Kcv=9.4e-7*Math.max(1,K.Qr/2.9e-4);
+  K.Gcb=Math.max(K.Qr,2.9e-4)/5e5;
+  K.Rf=4e4/Math.max(K.Qr,2.9e-4); K.Rs=5e3/Math.max(K.Qr,2.9e-4);
+  K.sigma={G550:570,G350:420,G300:360}[D.grade]||570;
+  K.Fcut=D.cutRef*1000*(D.sheetT/0.45)*(K.sigma/570);
+  K.Cth=D.oilL*1e-3*RHO*1880+D.tankL*250;
+  K.tankA=D.tankL*1e-3/0.45;
+  K.Vmax=0.9*D.tankL*1e-3; K.Vmin=0.6*D.tankL*1e-3; K.Vvort=0.55*D.tankL*1e-3;
+  K.xc=D.cutX/1000; K.h=D.profH/1000; K.xp=D.pressX/1000;
+  K.mass=[D.massCut,D.massCut,D.massPress];
+  K.thr=[D.thr1/100,D.thr2/100,D.thr3/100];
+}
+derive();
+
+/* =========================================================
+   DANH MỤC LỖI
+   ========================================================= */
+const ZONES=[['Z1','Z1 · Nguồn: thùng, hút, bơm, motor'],['Z2','Z2 · Điều áp: van DBW'],['E','E · Điện – PLC – motor'],['Z3','Z3 · Block & van hướng'],['Z4','Z4 · Ống mềm & xi lanh'],['Z5','Z5 · Đường hồi & lọc hồi'],['CK','CK · Cơ khí dao / dẫn hướng'],['ĐO','ĐO · Thiết bị đo']];
+const FAULTS=[
+ {id:'rev',z:'Z1',n:'Motor đấu ngược chiều',s:'Không lên áp ở mọi chế độ; VAC chỉ áp dương (+0,29 bar); bơm kêu khác thường.',t:'So chiều quay quạt motor với mũi tên trên thân bơm; VAC > 0.',f:'Đảo 2 pha cấp cho motor.'},
+ {id:'pump',z:'Z1',n:'Bơm mòn (rò trong lớn)',s:'Mọi xi lanh chậm khi có tải và khi dầu nóng; vẫn lên được áp chặn; dầu nóng nhanh.',t:'Lưu lượng kế: Q ra bơm ở 120 bar (~12,0 L/ph) chỉ đạt ~69 % so với ở 10 bar (~17,4 L/ph), thấp hơn chuẩn 85 %.',f:'Thay bơm hoặc bộ bánh răng, bạc.'},
+ {id:'suct',z:'Z1',n:'Lọc hút tắc',s:'VAC xuống dưới −0,3 bar (sim ≈ −0,54 bar); bơm rít; kim P0 rung; mọi xi lanh chậm.',t:'Đọc VAC khi mắt thăm đủ dầu (VAC ≈ −0,54 bar).',f:'Vệ sinh/thay lọc hút, kiểm tra ống hút hở khí.'},
+ {id:'lowoil',z:'Z1',n:'Thiếu dầu',s:'Mắt thăm dưới MIN; dầu có bọt; bơm ồn hơn khi các xi lanh duỗi ra.',t:'Mắt thăm dầu; VAC dao động.',f:'Châm dầu đúng loại, tìm chỗ rò.'},
+ {id:'dbwWeak',z:'Z2',n:'DBW lò xo yếu / bệ van mòn',s:'Áp chặn chỉ đạt ~62,5 bar (mở ở 55 bar + quá áp dòng chảy ~7,5 bar); vặn núm không lên thêm; dao kẹt ở ~142 mm không cắt đứt, xi lanh tải nhẹ vẫn chạy.',t:'Khóa VB một trạm, gạt van: P0 ≈ 62–63 bar (MG ≈ 62,5 bar, G ≈ 62 bar), LED giắc sáng.',f:'Thay lò xo, bệ hoặc thay van.'},
+ {id:'dbwVent',z:'Z2',n:'DBW xả tải không hết',s:'Áp nghỉ ~45,6 bar (~45–46 bar) thay vì 3–8 bar; dầu nóng nhanh; áp chặn vẫn đạt ~147 bar.',t:'Lúc nghỉ đo MT (đường hồi) ≈ 0,5 bar (0–2 bar) trong khi P0 ≈ 45,6 bar.',f:'Tháo vệ sinh con trượt pilot, lỗ tiết lưu tầng chính; thay van nếu mòn.'},
+ {id:'dbwHunt',z:'Z2',n:'DBW nghẹt lỗ giảm chấn',s:'Khi van an toàn đang xả (cuối hành trình/ chặn) kim P0 rung mạnh ±10–20 bar, van kêu rè.',t:'Đồng hồ cầm tay tại MP: đỉnh và đáy chênh nhau lớn quanh áp đặt.',f:'Vệ sinh lỗ giảm chấn tầng chính, thay dầu bẩn.'},
+ {id:'dbwPilot',z:'Z2',n:'Con trượt pilot DBW kẹt vị trí xả',s:'Gạt van nào cũng không lên áp cắt (đang chạy ~4 bar, chạm cuối hành trình ~6,3 bar); LED giắc sáng.',t:'LED sáng, ấn chốt tay coil cũng không lên áp (P0 vẫn ~4–6,3 bar).',f:'Tháo vệ sinh con trượt điện từ; thay van pilot.'},
+ {id:'sw1',z:'E',n:'Công tắc tay gạt V1 hỏng',s:'Gạt riêng V1: không lên áp (P0 ~4–6,3 bar); gạt V1 cùng V2 hoặc V3 thì XL1 chạy.',t:'Đèn X1 trên PLC không sáng khi gạt V1.',f:'Thay/chỉnh công tắc tay gạt V1, kiểm tra dây về X1.'},
+ {id:'wire',z:'E',n:'Đứt dây / relay KA / cầu chì Y0',s:'Gạt van nào cũng không lên áp cắt (P0 ~4–6,3 bar).',t:'Đèn Y0 sáng nhưng LED giắc tắt; 0 V tại giắc; ấn chốt tay → lên áp ~147 bar.',f:'Kiểm tra cầu chì, tiếp điểm KA, dây tới giắc YV0.'},
+ {id:'coil',z:'E',n:'Coil YV0 cháy (hở mạch)',s:'Gạt van nào cũng không lên áp cắt (P0 ~4–6,3 bar); LED giắc sáng.',t:'Có 24 V tại giắc; rút giắc đo coil = OL; ấn chốt tay → lên áp ~147 bar.',f:'Thay coil đúng điện áp, công suất.'},
+ {id:'olLow',z:'E',n:'Rơ-le nhiệt chỉnh quá thấp',s:'Motor tự dừng sau một lúc giữ áp hoặc cắt liên tục; reset được.',t:'Ampe kìm: dòng motor thấp hơn định mức nhưng rơ-le vẫn nhảy; xem nấc chỉnh.',f:'Chỉnh rơ-le nhiệt = 1,0–1,05 × In motor.'},
+ {id:'spool2',z:'Z3',n:'Van V2 mòn con trượt',s:'Dao cắt đuôi XL2 tự trôi xuống khi van ở GIỮA (~26–30 mm/phút, ~0,44 mm/s).',t:'VB mở: dao trôi khi van ở giữa; khóa VB2 → hết trôi; đo rò trong van V2 ≈ 4,1 L/ph (chuẩn < 0,1 L/ph). Lưu ý: khóa VB rồi gạt van thì G2 vẫn lên áp – không chứng minh được van kín.',f:'Thay van V2.'},
+ {id:'detent3',z:'Z3',n:'Van V3 hỏng khấc giữ',s:'XL3 nhấn chỉ nhích rồi dừng; tay gạt tự về giữa khi buông.',t:'Quan sát tay gạt; đèn X3 tắt ngay khi buông.',f:'Thay bi/lò xo khấc hoặc cụm định vị.'},
+ {id:'seal1',z:'Z4',n:'XL1 hỏng phớt piston',s:'Dao cắt đầu tự trôi xuống khi van ở GIỮA (~26–30 mm/phút, ~0,44 mm/s), G1 phía A về 0; khi chạy, tốc độ và áp cắt gần như bình thường; dầu nóng nhanh hơn khi giữ tay gạt ở cuối hành trình.',t:'Khóa VB1 dao vẫn trôi (khác rò van); bypass test XL1 ≈ 4,1–5,0 L/ph (chuẩn < 0,2 L/ph). Van giữ tải trên đường B không chữa được lỗi này.',f:'Thay bộ phớt piston, kiểm tra xước nòng.'},
+ {id:'rod2',z:'Z4',n:'XL2 rò phớt ty (rò ngoài)',s:'Ty dao cắt đuôi ướt dầu, nhỏ giọt; mức dầu giảm dần.',t:'Lau sạch ty, chạy vài chu kỳ, quan sát.',f:'Thay phớt ty + gạt bụi, kiểm tra xước ty.'},
+ {id:'hose3',z:'Z4',n:'Ống B XL3 rò ngoài',s:'Dầu nhỏ giọt ở ống phía ty XL3; mức dầu giảm dần; áp vẫn lên được vì rò nhỏ hơn nhiều so với lưu lượng bơm.',t:'Lau khô, giữ tay gạt lùi ở cuối hành trình (áp cao nhất): thấy dầu rỉ tại đầu nối; theo dõi mức dầu.',f:'Thay ống/đầu nối, siết lại.'},
+ {id:'score2',z:'Z4',n:'XL2 xước nòng giữa hành trình',s:'Dao cắt đuôi tự trôi xuống (~26–30 mm/phút) khi dừng trong đoạn 100–180 mm rồi tự dừng khi ra khỏi đoạn đó; dừng ở đầu hoặc cuối hành trình thì không trôi.',t:'Bypass test ở cuối hành trình vẫn đạt (< 0,2 L/ph) – dễ kết luận nhầm là phớt tốt. Đưa dao về ~120 mm, để van GIỮA, khóa VB2: vẫn trôi → lỗi trong xi lanh.',f:'Mài/thay nòng, thay phớt piston.'},
+ {id:'bent1',z:'Z4',n:'XL1 ty cong / lệch tâm',s:'Dao cắt đầu chạy nặng dần về cuối hành trình, áp khi chạy không tải tăng theo hành trình, có lúc giật; phớt ty mòn lệch một bên.',t:'So áp chạy không tải XL1 ở đầu và cuối hành trình, so với XL2; tháo liên kết đầu ty, quay ty đo độ đảo.',f:'Nắn hoặc thay ty, căn đồng tâm xi lanh với dẫn hướng dao.'},
+ {id:'air3',z:'Z4',n:'XL3 lọt khí (chưa xả gió)',s:'Đầu nhấn khởi động trễ, nhún khi chạm tôn, G3 lên áp chậm hơn P0.',t:'So thời gian lên áp của G3 với P0 khi đầu nhấn chạm tôn; nới nhẹ đầu nối cao nhất lúc áp thấp thấy bọt.',f:'Xả gió: chạy hết hành trình nhiều lần ở áp thấp, nới đầu nối hoặc vít xả gió.'},
+ {id:'retf',z:'Z5',n:'Lọc hồi tắc',s:'Chỉ báo lọc hồi đỏ khi có dòng hồi (ΔPf ≈ 4,2 bar); dầu bẩn đi qua bypass.',t:'Chỉ báo đỏ + ΔPf > 2 bar khi xi lanh chạy hoặc lúc xả tải.',f:'Thay lõi lọc hồi.'},
+ {id:'retRestr',z:'Z5',n:'Đường hồi nghẹt (van bi khép / ống gập)',s:'Lùi cần áp cao hơn tiến rõ rệt (đang lùi P0 ~106 bar, MT ~65 bar; chạm cuối hành trình lùi P0 vọt lên ~180–181 bar); dầu nóng. Áp nghỉ cao (~45,1 bar, MT ~39,5 bar) khi cổng T của DBW xả chung qua đoạn hồi bị nghẹt; nếu DBW xả thẳng về thùng thì áp nghỉ vẫn ~6,3 bar.',t:'Đo MT: lúc nghỉ (khi DBW xả qua đường hồi, MT ≈ 39,5 bar) hoặc lúc xi lanh đang lùi (MT ≈ 65 bar) đều cao bất thường.',f:'Mở hết van bi đường hồi, thay ống gập, kiểm tra két làm mát.'},
+ {id:'blunt1',z:'CK',n:'Dao cắt đầu cùn / khe hở dao sai',s:'Áp đỉnh khi cắt XL1 (~111 bar) cao hơn XL2 (~76 bar) khoảng 45 %; mép cắt có bavia.',t:'So áp đỉnh khi cắt của 2 dao (XL1 ≈ 111 bar vs XL2 ≈ 76 bar).',f:'Mài/đổi dao, chỉnh khe hở dao.'},
+ {id:'guide2',z:'CK',n:'Dẫn hướng dao cắt đuôi khô / kẹt',s:'XL2 chạy giật cục, áp khi chạy không tải cao và dao động.',t:'So áp chạy không tải XL2 với XL1.',f:'Bôi trơn, căn chỉnh dẫn hướng.'},
+ {id:'g2stuck',z:'ĐO',n:'Đồng hồ G2 kẹt kim',s:'G2 luôn chỉ 0 trong khi XL2 chạy bình thường.',t:'So G2 với đồng hồ cầm tay tại MA2/MB2.',f:'Thay đồng hồ.'},
+ {id:'p0off',z:'ĐO',n:'Đồng hồ P0 lệch kim (+40 bar)',s:'P0 chỉ ~46 bar lúc nghỉ (tắt motor vẫn đứng ở 40 bar), mọi số đọc P0 cao hơn thực 40 bar.',t:'Tắt motor, xả áp: P0 dừng ở 40 bar không về 0; đồng hồ cầm tay tại MP chỉ đúng (~6,3 bar lúc nghỉ).',f:'Thay đồng hồ P0.'}
+];
+const FBY={}; FAULTS.forEach(f=>FBY[f.id]=f);
+
+/* =========================================================
+   TRẠNG THÁI
+   ========================================================= */
+const NN=16, NP=0, NG=1, NT=2, NR=3;
+const iAV=i=>4+4*i, iBV=i=>5+4*i, iAC=i=>6+4*i, iBC=i=>7+4*i;
+const Pn=new Float64Array(NN), Qn=new Float64Array(NN), Dn=new Float64Array(NN), Cn=new Float64Array(NN), Vv=new Float64Array(NN);
+const CH={n:800,t:[],s:[[],[],[],[],[],[]],paused:false,lastT:-1};
+let S;
+function initState(keepFaults){
+  const old=S;
+  S={
+    t:0, km:false, estop:false, olTrip:false, olTh:0, n:0, I:0, Psh:0, T:0,
+    mass:[PAR.massCut,PAR.massCut,PAR.massPress], x:[0,0,0], v:[0,0,0], vAvg:[0,0,0], cutDone:[false,false,false], cutPk:[0,0,0], lastPk:[0,0,0], cuts:[0,0,0], stall:[false,false,false],
+    u:[0,0,0], cmd:[0,0,0], cmdT:[0,0,0], detFlag:-9,
+    ball:[true,true,true], gsel:['A','A','A'], iso:true,
+    relSet:PAR.relSet, pin:0, ovr:false, ovrHold:false, ovrLock:false, pset:PAR.ventP*BAR,
+    Toil:PAR.ambient+3, Vleak:0, air:0, Vtank:PAR.oilL*1e-3,
+    offT:0, X:[false,false,false], Y0:false, plugV:0, press:false, Qp:0, cav:false,
+    qRel:0, qCV:0, qF:0, qBy:0, qSeal:[0,0,0], qExt:0, qAvin:[0,0,0], qBvin:[0,0,0], qPi:[0,0,0], qTi:[0,0,0],
+    armed:false, armT:0, kmT:-99, startCmd:[0,0,0], ev:[],
+    gP0:0, gG:[0,0,0], gVac:0, tp:(old&&old.tp)||'MG', tpVal:0, tpPeak:0, tpMin:0,
+    faults:keepFaults&&old?old.faults:{}, hidden:keepFaults&&old?old.hidden:false, reveal:keepFaults&&old?old.reveal:false,
+    mu:1, beta:7e8, paused:false, puse:0
+  };
+  Pn.fill(0); Vv.fill(0);
+  for(let i=0;i<3;i++){const ph=S.mass[i]*GRAV/K.Ar; Pn[iBC(i)]=ph; Pn[iBV(i)]=ph; Pn[iAC(i)]=0.3e5; Pn[iAV(i)]=0.3e5;}
+  if(S.faults.lowoil) S.Vtank=0.5*PAR.tankL*1e-3;
+  if(S.faults.p0off) S.gP0=40e5;
+  CH.t=[];CH.s=CH.s.map(()=>[]);CH.lastT=-1;
+}
+initState(false);
+
+/* =========================================================
+   MÔ HÌNH THỦY LỰC – CƠ – NHIỆT – ĐIỆN
+   ========================================================= */
+let groups=[];
+function framePre(){
+  S.mu=visc(S.Toil,PAR.oil)/46;
+  S.beta=7e8/(1+30*S.air);
+  const V=[0.15e-3,0.5e-3,0.4e-3,0.15e-3];
+  for(let k=0;k<4;k++) Cn[k]=V[k]/S.beta;
+  for(let i=0;i<3;i++){Cn[iAV(i)]=0.05e-3/S.beta; Cn[iBV(i)]=0.05e-3/S.beta;}
+  groups=[[NP],[NG]];
+  if(S.faults.retRestr) groups.push([NT],[NR]); else groups.push([NT,NR]);
+  for(let i=0;i<3;i++){
+    if(S.ball[i]){groups.push([iAV(i),iAC(i)]); if(PAR.cbv==='yes'&&i<2) groups.push([iBV(i)],[iBC(i)]); else groups.push([iBV(i),iBC(i)]);}
+    else groups.push([iAV(i)],[iAC(i)],[iBV(i)],[iBC(i)]);
+  }
+}
+function pAt(b){return b<0?0:Pn[b];}
+function orif(a,b,Kc,dpt){ if(Kc<=0) return 0; const dp=Pn[a]-pAt(b); const s=Math.sqrt(Math.abs(dp)+dpt); const Q=Kc*dp/s, g=Kc/s; Qn[a]-=Q; Dn[a]+=g; if(b>=0){Qn[b]+=Q; Dn[b]+=g;} return Q; }
+function lam(a,b,G){ const dp=Pn[a]-pAt(b); const Q=G*dp; Qn[a]-=Q; Dn[a]+=G; if(b>=0){Qn[b]+=Q; Dn[b]+=G;} return Q; }
+function crack(a,b,G,pc){ const dp=Pn[a]-pAt(b); if(dp<=pc) return 0; const Q=G*(dp-pc); Qn[a]-=Q; Dn[a]+=G; if(b>=0){Qn[b]+=Q; Dn[b]+=G;} return Q; }
+function crackO(a,b,Kc,pc,dpt){ const dp=Pn[a]-pAt(b)-pc; if(dp<=0) return 0; const s=Math.sqrt(dp+dpt); const Q=Kc*dp/s, g=Kc/s; Qn[a]-=Q; Dn[a]+=g; if(b>=0){Qn[b]+=Q; Dn[b]+=g;} return Q; }
+
+function ev(i,l){S.ev.push({t:S.t,i:i,l:l}); if(S.ev.length>80) S.ev.shift();}
+function cutForce(i,x){
+  const z=(x-K.xc)*1000, hmm=K.h*1000;
+  if(z<0||z>=hmm) return 0;
+  const ramp=Math.min(1,z/2), rip=0.75+0.25*Math.abs(Math.sin(Math.PI*z/(hmm/3)));
+  return K.Fcut*ramp*rip*(i===0&&S.faults.blunt1?1.45:1);
+}
+
+function step(dt,dtTh){
+  const F=S.faults, P=Pn, mu=S.mu, beta=S.beta;
+  S.t+=dt;
+  /* --- tay gạt (người vận hành) --- */
+  for(let i=0;i<3;i++){
+    if(i===2&&F.detent3&&S.cmd[2]!==0&&S.t-S.cmdT[2]>0.4){S.cmd[2]=0;S.detFlag=S.t;}
+    const du=S.cmd[i]-S.u[i], r=8*dt; S.u[i]+=Math.abs(du)<r?du:Math.sign(du)*r;
+  }
+  /* --- PLC + điện --- */
+  if(S.estop||S.olTrip) S.km=false;
+  const X0=S.km, X4=!S.estop;
+  const X=[Math.abs(S.u[0])>0.3&&!F.sw1, Math.abs(S.u[1])>0.3, Math.abs(S.u[2])>0.3];
+  if(!X0||!X4){S.armed=false;S.armT=0;} else if(!X[0]&&!X[1]&&!X[2]){S.armT+=dt; if(S.armT>0.3) S.armed=true;} else S.armT=0;
+  const ena=X0&&X4&&(PAR.rearm!=='yes'||S.armed);
+  if(ena&&(X[0]||X[1]||X[2])) S.offT=PAR.offDelay; else S.offT=Math.max(0,S.offT-dt);
+  const Y0=ena&&(S.offT>0||X[0]||X[1]||X[2]);
+  const plugV=(Y0&&!F.wire)?24:0;
+  const coilOn=plugV>0&&!F.coil;
+  S.ovr=S.ovrHold||S.ovrLock;
+  const press=(coilOn||S.ovr)&&!F.dbwPilot;
+  S.X=X; S.Y0=Y0; S.plugV=plugV; S.coilOn=coilOn; S.press=press;
+  /* --- motor + bơm --- */
+  const T=(S.n>1?K.Vp*Math.max(0,P[NP]-S.pin)/(2*Math.PI*0.88):0)+(S.n>1?0.6:0);
+  const nT=S.km?K.nSync-K.slipR*(T/K.Tr):0;
+  S.n+=(nT-S.n)*Math.min(1,dt/(S.km?0.25:0.6));
+  if(!S.km&&S.n<0.5) S.n=0;
+  const Psh=T*S.n*2*Math.PI/60;
+  const In=PAR.motorIn, I0=0.42*In;
+  let I=S.km?I0+(In-I0)*Psh/(PAR.motorKW*1000)+5.5*In*clamp(1-S.n/(0.96*K.nSync),0,1):0;
+  S.I=I; S.Psh=Psh; S.T=T;
+  const Iset=F.olLow?0.62*PAR.olSet:PAR.olSet;
+  S.olTh+=dt*((I/Iset)*(I/Iset)-S.olTh)/90;
+  if(S.olTh>1.25&&S.km){S.olTrip=true;S.km=false;}
+  const Qth=K.Vp*S.n/60;
+  let fill=1, pin;
+  const hLift=0.25+Math.max(0,(K.Vmax-S.Vtank)/K.tankA);
+  if(F.rev){ pin=0.3e5*S.n/K.nSync; fill=0; }
+  else{
+    const a=-RHO*GRAV*hLift, b=(K.Rs*mu*(F.suct?14:1)+1.4e7*mu*(2.9e-4/Math.max(K.Qr,1e-6)))*Qth;
+    if(-0.3e5-a+b>0){ fill=(1-2e-5*(-0.3e5-a))/(1+2e-5*b); fill=clamp(fill,0.35,1);}
+    pin=a-b*fill;
+  }
+  fill*=Math.max(0.5,1-1.5*S.air);
+  S.pin=pin; S.cav=!F.rev&&S.n>100&&pin<-0.27e5;
+  const Qsrc=F.rev?0:Qth*fill; S.Qp=Qsrc;
+  /* --- xóa tích lũy --- */
+  Qn.fill(0); Dn.fill(0);
+  Qn[NP]+=Qsrc;
+  lam(NP,-1,K.Gpl0*(F.pump?9:1)/mu);
+  /* --- DBW --- */
+  const ps=(F.dbwWeak?Math.min(S.relSet,55):S.relSet)*BAR;
+  const pv=(F.dbwVent?38:PAR.ventP)*BAR;
+  const tgt=press?ps:pv;
+  S.pset+=(tgt-S.pset)*Math.min(1,dt/(tgt>S.pset?0.035:0.02));
+  let pe=S.pset;
+  if(F.dbwHunt&&press&&S.qRel>2e-5) pe+=14e5*Math.sin(2*Math.PI*17*S.t)+5e5*Math.sin(2*Math.PI*43*S.t);
+  const Gd=S.pset<15e5?K.Gv:K.Gr;
+  S.qRel=crack(NP,PAR.dbwDrain==='filter'?NT:-1,Gd,pe);
+  /* --- van một chiều + ống ra block --- */
+  S.qCV=crackO(NP,NG,K.Kcv,0.5e5,1e5);
+  lam(NG,NP,1e-15);
+  /* --- 3 van hướng 4/3 tâm đóng --- */
+  for(let i=0;i<3;i++){
+    const u=S.u[i], fp=clamp((u-0.15)/0.85,0,1), fm=clamp((-u-0.15)/0.85,0,1);
+    const A=iAV(i), B=iBV(i);
+    let fPA=0,fBT=0,fPB=0,fAT=0;
+    if(fp>0){fPA=orif(NG,A,K.Kv*fp,1e5); fBT=orif(B,NT,K.Kv*fp*K.thr[i],1e5);}
+    if(fm>0){fPB=orif(NG,B,K.Kv*fm,1e5); fAT=orif(A,NT,K.Kv*fm,1e5);}
+    const Gl=(i===1&&F.spool2?6e-12:3.3e-14)/mu;
+    fPA+=lam(NG,A,Gl); fPB+=lam(NG,B,Gl); fAT+=lam(A,NT,Gl); fBT+=lam(B,NT,Gl);
+    if(PAR.center==='abt'){const fn=clamp(1-Math.abs(u)/0.3,0,1); if(fn>0){fAT+=orif(A,NT,K.Kv*0.5*fn,1e5); fBT+=orif(B,NT,K.Kv*0.5*fn,1e5);}}
+    S.qAvin[i]=fPA-fAT; S.qBvin[i]=fPB-fBT; S.qPi[i]=fPA+fPB; S.qTi[i]=fAT+fBT;
+    /* xi lanh: rò qua piston */
+    let Gs=1.7e-15; if(i===0&&F.seal1) Gs=6e-12; if(i===1&&F.score2&&S.x[1]>0.10&&S.x[1]<0.18) Gs=6e-12;
+    S.qSeal[i]=lam(iAC(i),iBC(i),Gs/mu);
+    if(PAR.cbv==='yes'&&i<2&&S.ball[i]){const pc=Math.max(0,PAR.cbvSet*BAR-3*Math.max(0,P[iAC(i)])); crack(iBC(i),iBV(i),K.Gcb,pc); crackO(iBV(i),iBC(i),K.Kcv,0.3e5,3e5);}
+  }
+  let qext=0;
+  if(F.rod2) qext+=Math.max(0,lam(iBC(1),-1,4e-13/mu));
+  let qh=0; if(F.hose3&&P[iBC(2)]>0) qh=Math.max(0,orif(iBC(2),-1,1.0e-8,1e5)); qext+=qh; S.qHose=qh;
+  S.qExt=qext; S.Vleak+=qext*dt;
+  /* --- đường hồi + lọc hồi --- */
+  if(F.retRestr) orif(NT,NR,1.5e-7,1e5);
+  S.qF=lam(NR,-1,1/(K.Rf*mu*(F.retf?9:1)));
+  S.qBy=crack(NR,-1,4e-9,2.5e5);
+  /* --- xi lanh: thể tích buồng --- */
+  for(let i=0;i<3;i++){
+    const x=S.x[i], v=S.v[i];
+    const ca=(i===2&&F.air3)?25:1;
+    Cn[iAC(i)]=ca*(K.V0c+K.Ac*x)/beta; Cn[iBC(i)]=ca*(K.V0c+K.Ar*(K.L-x))/beta;
+    Qn[iAC(i)]-=K.Ac*v; Qn[iBC(i)]+=K.Ar*v;
+  }
+  /* --- cập nhật áp (bán ẩn theo từng nhóm nút) --- */
+  for(let g=0;g<groups.length;g++){
+    const gr=groups[g]; let sC=0,sN=0,sD=0,sCp=0,vk=-1;
+    for(let j=0;j<gr.length;j++){const k=gr[j]; sC+=Cn[k]; sN+=Qn[k]; sD+=Dn[k]; sCp+=Cn[k]*P[k]; if(k>=4&&((k-4)%4)>=2) vk=k;}
+    const pa=sCp/sC; let pn=pa+dt*sN/(sC+dt*sD);
+    if(vk>=0){
+      if(pn<PVAP){Vv[vk]+=(PVAP-pn)*sC; pn=PVAP;}
+      else if(Vv[vk]>0){const vol=(pn-PVAP)*sC; if(vol<=Vv[vk]){Vv[vk]-=vol;pn=PVAP;}else{pn=PVAP+(vol-Vv[vk])/sC;Vv[vk]=0;}}
+    } else if(pn<PVAP) pn=PVAP;
+    if(pn>450e5) pn=450e5;
+    for(let j=0;j<gr.length;j++) P[gr[j]]=pn;
+  }
+  /* --- cơ: xi lanh đứng, đầu cán hướng xuống --- */
+  let puse=0;
+  for(let i=0;i<3;i++){
+    const m=Math.max(1,S.mass[i]); let x=S.x[i], v=S.v[i]; const xPrev=x;
+    const pa=P[iAC(i)], pb=P[iBC(i)];
+    const Fh=pa*K.Ac-pb*K.Ar;
+    let Fd=Fh+m*GRAV;
+    if(i===2){const c=x-K.xp; if(c>0) Fd-=2e7*c+2e4*v;}
+    let Fc=300+0.015*Math.abs(Fh), Fs=1.25*Fc;
+    if(i===1&&F.guide2){Fc+=5500; Fs=Fc*1.7;}
+    if(i===0&&F.bent1){Fc+=9000*Math.pow(x/K.L,2); Fs=Fc*1.4;}
+    let Rc=0,Rw=0;
+    if(i<2&&!S.cutDone[i]){Rc=cutForce(i,x); Rw=0.12*Rc;}
+    const Bv=3000; let a;
+    if(Math.abs(v)<1e-4){
+      if(Fd>Fs+Rc) a=(Fd-Fc-Rc)/m;
+      else if(Fd<-(Fs+Rw)) a=(Fd+Fc+Rw)/m;
+      else {a=0; v=0;}
+    } else if(v>0) a=(Fd-Fc-Rc-Bv*v)/m;
+    else a=(Fd+Fc+Rw-Bv*v)/m;
+    const v0=v; v+=a*dt; if(v0!==0&&Math.sign(v)!==Math.sign(v0)) v=0;
+    x+=v*dt;
+    if(x<=0){x=0;if(v<0)v=0;} if(x>=K.L){x=K.L;if(v>0)v=0;}
+    if(v>0) puse+=Rc*v;
+    if(i<2){
+      const inZ=x>=K.xc&&x<K.xc+K.h;
+      if(inZ&&!S.cutDone[i]) S.cutPk[i]=Math.max(S.cutPk[i],pa);
+      S.stall[i]=inZ&&!S.cutDone[i]&&Math.abs(v)<1e-4&&S.u[i]>0.5;
+      if(!S.cutDone[i]&&x>=K.xc+K.h){S.cutDone[i]=true;S.lastPk[i]=S.cutPk[i];S.cuts[i]++;ev(i,'cắt đứt '+f0(S.cutPk[i]/BAR)+' bar');S.cutPk[i]=0;}
+      if(S.cutDone[i]&&x<K.xc-0.005) S.cutDone[i]=false;
+    }
+    if(i<2&&xPrev<K.xc&&x>=K.xc) ev(i,'chạm tôn');
+    if(i===2&&xPrev<K.xp&&x>=K.xp) ev(i,'chạm tôn');
+    if(xPrev<K.L&&x>=K.L) ev(i,'cuối hành trình');
+    if(xPrev>0&&x<=0) ev(i,'về đầu');
+    S.x[i]=x; S.v[i]=v;
+    S.vAvg[i]+=(v-S.vAvg[i])*Math.min(1,dt/0.25);
+  }
+  S.puse=puse;
+  /* --- nhiệt, mức dầu, bọt khí --- */
+  const loss=PAR.kA*(S.Toil-PAR.ambient)+(PAR.cooler==='yes'&&S.Toil>45?160*(S.Toil-PAR.ambient):0);
+  S.Toil+=dtTh*(Psh*0.97-puse-loss)/K.Cth;
+  if(S.Toil>130) S.Toil=130;
+  let vc=0; for(let i=0;i<3;i++) vc+=(K.Ac-K.Ar)*S.x[i];
+  S.Vtank=(S.faults.lowoil?0.5*PAR.tankL*1e-3:PAR.oilL*1e-3)*(1+7e-4*(S.Toil-30))-vc-S.Vleak;
+  let ing=S.Vtank<K.Vvort?(K.Vvort-S.Vtank)*1000*0.004*(S.n/K.nSync):0;
+  if(S.cav) ing+=0.01;
+  S.air=clamp(S.air+dt*(ing-S.air/25),0,0.25);
+  /* --- đồng hồ (độ trễ glycerin) --- */
+  const lg=(c,t,tau)=>c+(t-c)*Math.min(1,dt/tau);
+  if(S.iso) S.gP0=lg(S.gP0,Math.max(0,P[NP])+(F.p0off?40e5:0),0.06);
+  for(let i=0;i<3;i++){const tg=(i===1&&F.g2stuck)?0:Math.max(0,S.gsel[i]==='A'?P[iAV(i)]:P[iBV(i)]); S.gG[i]=lg(S.gG[i],tg,0.06);}
+  S.gVac=lg(S.gVac,clamp(pin,-1e5,1e5),0.2);
+  const tpn=TPMAP[S.tp]; S.tpVal=lg(S.tpVal,P[tpn],0.004);
+  if(S.tpVal>S.tpPeak) S.tpPeak=S.tpVal; if(S.tpVal<S.tpMin) S.tpMin=S.tpVal;
+}
+
+/* =========================================================
+   TEST POINTS
+   ========================================================= */
+const TPS=[['MP','MP · cửa bơm, trước van 1 chiều',NP],['MG','MG · block cổng P',NG],['MT','MT · đường hồi / cổng T DBW',NT],['MR','MR · trước lọc hồi (sau van bi hồi)',NR]];
+for(let i=0;i<3;i++){TPS.push(['MA'+(i+1),'MA'+(i+1)+' · trạm '+(i+1)+' phía A (đáy)',iAV(i)]);TPS.push(['MB'+(i+1),'MB'+(i+1)+' · trạm '+(i+1)+' phía B (ty)',iBV(i)]);}
+const TPMAP={}; TPS.forEach(t=>TPMAP[t[0]]=t[2]);
+
+/* =========================================================
+   VẼ SƠ ĐỒ SVG
+   ========================================================= */
+const CX=[330,660,990], NAMES=['XL1','XL2','XL3'], ROLES=['CẮT ĐẦU','CẮT ĐUÔI','NHẤN'], RODL=[180,180,145];
+const STOPS=[[-1,[46,139,87]],[0,[179,188,198]],[3,[126,156,194]],[20,[227,163,59]],[80,[221,106,44]],[140,[200,55,45]],[220,[126,22,16]]];
+function pcol(p){const b=p/BAR; if(b<=-0.3) return 'rgb(46,139,87)'; if(b<0) return 'rgb(179,188,198)'; for(let k=1;k<STOPS.length;k++){if(b<=STOPS[k][0]){const [b0,c0]=STOPS[k-1],[b1,c1]=STOPS[k];const f=(b-b0)/(b1-b0);return 'rgb('+Math.round(c0[0]+(c1[0]-c0[0])*f)+','+Math.round(c0[1]+(c1[1]-c0[1])*f)+','+Math.round(c0[2]+(c1[2]-c0[2])*f)+')';}} return 'rgb(126,22,16)';}
+const INK='#17202B';
+function gaugeSVG(id,cx,cy,r,max,red,lbl,act,ttl){
+  let s='<g'+(act?' class="svg-hit" data-svg-act="'+act+'"':'')+'>'+(ttl?'<title>'+ttl+'</title>':'')+'<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2.5"/>';
+  const big=r>=30;
+  for(let k=0;k<=(big?25:10);k++){const st=big?9.6:24, mj=big?(k%5===0):(k%5===0); const a=(-120+st*k)*Math.PI/180, r1=r-2, r2=r-(mj?(big?9:8):(big?5:5));s+='<line x1="'+(cx+r1*Math.sin(a)).toFixed(1)+'" y1="'+(cy-r1*Math.cos(a)).toFixed(1)+'" x2="'+(cx+r2*Math.sin(a)).toFixed(1)+'" y2="'+(cy-r2*Math.cos(a)).toFixed(1)+'" stroke="'+INK+'" stroke-width="'+(mj?1.6:1)+'"/>';
+    if(big&&mj&&k>0&&k<25){const rt=r-17;s+='<text x="'+(cx+rt*Math.sin(a)).toFixed(1)+'" y="'+(cy-rt*Math.cos(a)+3.5).toFixed(1)+'" text-anchor="middle" font-size="'+(r*0.2).toFixed(1)+'" fill="#4A5561" font-family="Consolas,monospace">'+Math.round(max*k/25)+'</text>';}}
+  if(red!=null){const a=(-120+240*red/max)*Math.PI/180;s+='<line id="'+id+'R" x1="'+(cx+(r-2)*Math.sin(a)).toFixed(1)+'" y1="'+(cy-(r-2)*Math.cos(a)).toFixed(1)+'" x2="'+(cx+(r-9)*Math.sin(a)).toFixed(1)+'" y2="'+(cy-(r-9)*Math.cos(a)).toFixed(1)+'" stroke="#C8372D" stroke-width="2.5"/>';}
+  s+='<line id="'+id+'N" x1="'+cx+'" y1="'+cy+'" x2="'+cx+'" y2="'+(cy-r+6)+'" stroke="#C8372D" stroke-width="'+(r>=30?3.2:2.2)+'" stroke-linecap="round" transform="rotate(-120 '+cx+' '+cy+')"/>';
+  s+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(r>=30?5:3)+'" fill="'+INK+'"/>';
+  s+='<text id="'+id+'T" x="'+cx+'" y="'+(cy+r*0.55)+'" text-anchor="middle" font-size="'+Math.max(9,Math.round(r*0.4))+'" font-weight="700" font-family="Consolas,monospace">0</text>';
+  if(lbl) s+='<text x="'+cx+'" y="'+(cy-r-5)+'" text-anchor="middle" font-size="11" font-weight="700">'+lbl+'</text>';
+  return s+'</g>';
+}
+function bowtie(id,x,y,act,ttl){return '<g id="'+id+'"'+(act?' class="svg-hit" data-svg-act="'+act+'"':'')+'>'+(ttl?'<title>'+ttl+'</title>':'')+'<rect x="'+(x-10)+'" y="'+(y-12)+'" width="20" height="24" fill="transparent"/><polygon points="'+(x-7)+','+(y-10)+' '+(x+7)+','+(y-10)+' '+x+','+y+'" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.5"/><polygon points="'+(x-7)+','+(y+10)+' '+(x+7)+','+(y+10)+' '+x+','+y+'" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.5"/></g>';}
+const TP_POS={MP:[270,690],MG:[368,590],MT:[1220,690],MR:[1220,738]};
+for(let i=0;i<3;i++){TP_POS['MA'+(i+1)]=[CX[i]-50,440];TP_POS['MB'+(i+1)]=[CX[i]+78,440];}
+function tpSVG(code,x,y,tx,ty,ttl){
+  return '<g class="svg-hit" data-svg-tp="'+code+'"><title>Bấm để cắm đồng hồ cầm tay vào '+code+' ('+ttl+')</title><circle cx="'+x+'" cy="'+y+'" r="10" fill="transparent"/><circle cx="'+x+'" cy="'+y+'" r="5" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/><text x="'+tx+'" y="'+ty+'" font-size="9.5" font-weight="700" font-family="Consolas,monospace">'+code+'</text></g>';
+}
+const PIPES=[]; // {el, node, flowEl, fkey}
+function pipe(id,d,node,fkey,w){PIPES.push({id,node,fkey});return '<path id="'+id+'" d="'+d+'" fill="none" stroke="#B3BCC6" stroke-width="'+(w||5)+'" stroke-linejoin="round" stroke-linecap="round"/>'+(fkey?'<path id="'+id+'F" d="'+d+'" fill="none" stroke="#FFFFFF" stroke-opacity="0.85" stroke-width="1.6" stroke-dasharray="4 10" style="display:none"/>':'');}
+function buildSVG(){
+  let s='';
+  s+='<defs><pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse"><path d="M0,6 L6,0" stroke="#C9CED4" stroke-width="1"/></pattern></defs>';
+  // tôn + con lăn
+  s+='<rect x="96" y="300" width="1130" height="5" fill="#7D8790"/><text x="1090" y="292" font-size="11" fill="#4A5561">TÔN → chiều chạy</text>';
+  [130,1200].forEach(x=>{s+='<circle cx="'+x+'" cy="290" r="9" fill="#FFFFFF" stroke="#7D8790" stroke-width="2"/><circle cx="'+x+'" cy="315" r="9" fill="#FFFFFF" stroke="#7D8790" stroke-width="2"/>';});
+  // block
+  s+='<rect x="200" y="570" width="1000" height="85" rx="4" fill="#E3E6EA" stroke="'+INK+'" stroke-width="2"/>';
+  s+='<text x="212" y="612" font-size="10.5" font-weight="700">BLOCK VAN 3 TRẠM</text>';
+  s+=pipe('pNG','M330,656 V590 H1042','NG','qCV');
+  s+=pipe('pNT','M408,635 H1220 V712','NT','qRet');
+  // trạm
+  for(let i=0;i<3;i++){
+    const c=CX[i];
+    s+=pipe('pAC'+i,'M'+(c-28)+',24 H'+(c-50)+' V385','AC'+i,'qAC'+i);
+    s+=pipe('pBC'+i,'M'+(c+28)+',158 H'+(c+78)+' V385','BC'+i,'qBC'+i);
+    s+=pipe('pAV'+i,'M'+(c-50)+',405 V484 H'+(c+52)+' V500','AV'+i,'qAV'+i);
+    s+=pipe('pBV'+i,'M'+(c+78)+',405 V500','BV'+i,'qBV'+i);
+    s+=pipe('pPV'+i,'M'+(c+52)+',546 V590','NG','qPV'+i);
+    s+=pipe('pTV'+i,'M'+(c+78)+',546 V635','NT','qTV'+i);
+    if(i<2){ s+=pipe('pBL'+i,'M'+(c+78)+',362 V385','BV'+i,null);
+      s+='<g id="cbv'+i+'" style="display:none"><path d="M'+(c-50)+',376 H'+(c+60)+' V352" fill="none" stroke="'+INK+'" stroke-width="1.2" stroke-dasharray="4 3"/><rect x="'+(c+60)+'" y="330" width="36" height="32" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.8"/><line x1="'+(c+72)+'" y1="358" x2="'+(c+72)+'" y2="338" stroke="'+INK+'" stroke-width="1.6"/><polygon points="'+(c+72)+',334 '+(c+69)+',340 '+(c+75)+',340" fill="'+INK+'"/><polyline points="'+(c+62)+',333 '+(c+65)+',330 '+(c+68)+',333" fill="none" stroke="'+INK+'" stroke-width="1"/><polyline points="'+(c+84)+',340 '+(c+88)+',348 '+(c+92)+',340" fill="none" stroke="'+INK+'" stroke-width="1.5"/><circle cx="'+(c+88)+'" cy="352" r="3" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.4"/><text x="'+(c+100)+'" y="342" font-size="9.5" font-weight="700">VGT'+(i+1)+'</text><text x="'+(c+100)+'" y="354" font-size="8.5" fill="#4A5561">van cân bằng</text></g>'; }
+    // khung + dẫn hướng
+    s+='<rect x="'+(c-62)+'" y="0" width="124" height="8" fill="#8C96A0"/>';
+    s+='<rect x="'+(c-46)+'" y="172" width="4" height="190" fill="#C9CED4"/><rect x="'+(c+42)+'" y="172" width="4" height="190" fill="#C9CED4"/>';
+    // xi lanh
+    s+='<rect id="chA'+i+'" x="'+(c-25)+'" y="13" width="50" height="3" fill="#B3BCC6" fill-opacity="0.45"/>';
+    s+='<rect id="chB'+i+'" x="'+(c-25)+'" y="26" width="50" height="141" fill="#B3BCC6" fill-opacity="0.45"/>';
+    s+='<rect id="rod'+i+'" x="'+(c-7)+'" y="26" width="14" height="'+RODL[i]+'" fill="#A7B0BA" stroke="'+INK+'" stroke-width="1"/>';
+    s+='<rect id="pis'+i+'" x="'+(c-25)+'" y="16" width="50" height="10" fill="'+INK+'"/>';
+    s+='<rect x="'+(c-28)+'" y="10" width="56" height="160" fill="none" stroke="'+INK+'" stroke-width="3"/>';
+    if(i<2) s+='<g id="tool'+i+'"><polygon points="'+(c-40)+',0 '+(c+40)+',0 '+(c+40)+',18 '+(c-40)+',26" fill="#5B6672" stroke="'+INK+'" stroke-width="1.5"/><text id="toolM'+i+'" x="'+c+'" y="13" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF"></text></g>';
+    else s+='<g id="tool'+i+'"><rect x="'+(c-40)+'" y="-6" width="80" height="16" fill="#5B6672" stroke="'+INK+'" stroke-width="1.5"/><rect x="'+(c-40)+'" y="10" width="80" height="4" fill="#2F343A"/><text id="toolM'+i+'" x="'+c+'" y="6" text-anchor="middle" font-size="10" font-weight="700" fill="#FFFFFF"></text></g>';
+    s+='<rect id="cutGap'+i+'" x="'+(c-3)+'" y="299" width="6" height="7" fill="#FFFFFF" style="display:none"/>';
+    s+='<text x="'+(c-150)+'" y="36" font-size="15" font-weight="700">'+NAMES[i]+'</text><text x="'+(c-150)+'" y="52" font-size="11" fill="#4A5561">'+ROLES[i]+'</text>';
+    s+='<text id="cylT'+i+'" x="'+(c-150)+'" y="70" font-size="10.5" font-family="Consolas,monospace" fill="#17202B"></text>';
+    s+='<text id="cylT2'+i+'" x="'+(c-150)+'" y="84" font-size="10.5" font-family="Consolas,monospace" fill="#17202B"></text>';
+    s+='<text x="'+(c-44)+'" y="21" font-size="9" fill="#4A5561">A</text><text x="'+(c+33)+'" y="155" font-size="9" fill="#4A5561">B</text>';
+    s+='<g id="drip'+i+'" style="display:none"><path d="M'+(c+92)+',232 c0,0 -6,8 -6,11 a6,6 0 0 0 12,0 c0,-3 -6,-11 -6,-11 z" fill="#B8650F"/><text x="'+(c+102)+'" y="246" font-size="10" font-weight="700" fill="#9A4A0E">dầu rò</text></g>';
+    // van bi, test point, đồng hồ
+    s+=bowtie('bvA'+i,c-50,395,'ball:'+i,'Bấm để Mở/Khóa van bi cô lập VB'+(i+1))+bowtie('bvB'+i,c+78,395,'ball:'+i,'Bấm để Mở/Khóa van bi cô lập VB'+(i+1));
+    s+='<text id="bvT'+i+'" class="svg-hit" data-svg-act="ball:'+i+'" x="'+(c-86)+'" y="399" font-size="9" fill="#4A5561">VB'+(i+1)+'</text>';
+    s+=tpSVG('MA'+(i+1),c-50,440,c-90,444,'trạm '+(i+1)+' phía đáy A');
+    s+=tpSVG('MB'+(i+1),c+78,440,c+87,444,'trạm '+(i+1)+' phía ty B');
+    s+=gaugeSVG('gG'+i,c+14,420,42,250,140,null,'gs:'+i,'Bấm để đổi đồng hồ G'+(i+1)+' đo nhánh A hoặc B');
+    s+='<text id="gGL'+i+'" class="svg-hit" data-svg-act="gs:'+i+'" x="'+(c+14)+'" y="476" text-anchor="middle" font-size="11" font-weight="700">G'+(i+1)+' · A</text>';
+    // van 4/3
+    s+='<text x="'+(c+48)+'" y="496" font-size="9" fill="#4A5561">A</text><text x="'+(c+82)+'" y="496" font-size="9" fill="#4A5561">B</text>';
+    s+='<text x="'+(c+40)+'" y="560" font-size="9" fill="#4A5561">P</text><text x="'+(c+82)+'" y="560" font-size="9" fill="#4A5561">T</text>';
+    s+='<g id="vg'+i+'">';
+    s+='<line x1="'+(c-13)+'" y1="523" x2="'+(c-33)+'" y2="523" stroke="'+INK+'" stroke-width="2"/><line x1="'+(c-33)+'" y1="523" x2="'+(c-40)+'" y2="510" stroke="'+INK+'" stroke-width="2"/><circle cx="'+(c-41)+'" cy="508" r="3" fill="'+INK+'"/>';
+    const bx=[c-13,c+39,c+91];
+    const lvD=[1,0,-1], lvLbl=['TIẾN ▼ (hạ xuống)','GIỮA (dừng)','LÙI ▲ (kéo lên)'];
+    for(let k=0;k<3;k++) s+='<rect id="vb'+i+'_'+k+'" class="svg-hit" data-svg-act="lv:'+i+':'+lvD[k]+'" x="'+bx[k]+'" y="500" width="52" height="46" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"><title>Bấm để gạt van V'+(i+1)+' sang '+lvLbl[k]+'</title></rect>';
+    let x0=bx[0];
+    s+='<g pointer-events="none"><line x1="'+(x0+13)+'" y1="542" x2="'+(x0+13)+'" y2="508" stroke="'+INK+'" stroke-width="2"/><polygon points="'+(x0+13)+',502 '+(x0+9)+',510 '+(x0+17)+',510" fill="'+INK+'"/><line x1="'+(x0+39)+'" y1="502" x2="'+(x0+39)+'" y2="536" stroke="'+INK+'" stroke-width="2"/><polygon points="'+(x0+39)+',544 '+(x0+35)+',536 '+(x0+43)+',536" fill="'+INK+'"/></g>';
+    x0=bx[1];
+    s+='<g id="cC'+i+'" pointer-events="none">'; [[13,500,13,510],[8,510,18,510],[39,500,39,510],[34,510,44,510],[13,546,13,536],[8,536,18,536],[39,546,39,536],[34,536,44,536]].forEach(q=>{s+='<line x1="'+(x0+q[0])+'" y1="'+q[1]+'" x2="'+(x0+q[2])+'" y2="'+q[3]+'" stroke="'+INK+'" stroke-width="2"/>';}); s+='</g>';
+    s+='<g id="cO'+i+'" style="display:none" pointer-events="none">'; [[13,500,13,523],[13,523,39,523],[39,500,39,546],[13,546,13,536],[8,536,18,536]].forEach(q=>{s+='<line x1="'+(x0+q[0])+'" y1="'+q[1]+'" x2="'+(x0+q[2])+'" y2="'+q[3]+'" stroke="'+INK+'" stroke-width="2"/>';}); s+='</g>';
+    x0=bx[2];
+    s+='<g pointer-events="none"><line x1="'+(x0+13)+'" y1="542" x2="'+(x0+37)+'" y2="506" stroke="'+INK+'" stroke-width="2"/><polygon points="'+(x0+39)+',502 '+(x0+38)+',511 '+(x0+31)+',507" fill="'+INK+'"/><line x1="'+(x0+13)+'" y1="504" x2="'+(x0+37)+'" y2="540" stroke="'+INK+'" stroke-width="2"/><polygon points="'+(x0+39)+',544 '+(x0+31)+',539 '+(x0+38)+',535" fill="'+INK+'"/></g>';
+    s+='<line x1="'+(c+143)+'" y1="523" x2="'+(c+163)+'" y2="523" stroke="'+INK+'" stroke-width="2"/><polyline id="det'+i+'" points="'+(c+149)+',531 '+(c+153)+',536 '+(c+157)+',531 '+(c+161)+',536" fill="none" stroke="'+INK+'" stroke-width="2"/>';
+    s+='</g>';
+    s+='<circle id="ms'+i+'" cx="'+(c-30)+'" cy="560" r="5" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.5"/><text x="'+(c-22)+'" y="564" font-size="9.5" fill="#4A5561">S'+(i+1)+' → X'+(i+1)+'</text>';
+    s+='<text id="vpos'+i+'" x="'+(c+102)+'" y="564" font-size="10" font-weight="700">V'+(i+1)+' · GIỮA</text>';
+  }
+  // cụm nguồn
+  s+=pipe('pNP','M240,711 V690 H330 V672','NP','qp');
+  s+=pipe('pNP2','M240,690 H120','NP',null);
+  s+=pipe('pNP3','M300,690 V702','NP',null);
+  s+=tpSVG('MP',270,690,260,680,'cửa bơm, trước van 1 chiều');
+  s+=tpSVG('MG',368,590,358,580,'đường P chung trong block van');
+  s+='<rect x="321" y="656" width="18" height="16" fill="#FFFFFF"/><polyline points="323,660 330,670 337,660" fill="none" stroke="'+INK+'" stroke-width="2"/><circle cx="330" cy="662" r="4.5" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.8"/>';
+  s+='<text x="342" y="668" font-size="9.5" fill="#4A5561">van 1 chiều</text>';
+  s+='<rect id="isoSym" class="svg-hit" data-svg-act="iso" x="140" y="684" width="12" height="12" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.5"><title>Bấm để Mở/Khóa van cô lập đồng hồ P0</title></rect>';
+  s+=gaugeSVG('gP0',68,690,52,250,140,'P0');
+  // DBW
+  s+=pipe('pDrF','M309,756 V783 H1180 V700 H1220 V712','DR','qRel');
+  s+=pipe('pDrT','M309,756 V880','DRT','qRel');
+  s+='<rect x="282" y="702" width="54" height="54" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/>';
+  s+='<polyline points="286,708 291,704 296,708 301,704 306,708 311,704 316,708" fill="none" stroke="'+INK+'" stroke-width="1.4"/>';
+  s+='<line x1="292" y1="752" x2="326" y2="712" stroke="'+INK+'" stroke-width="1.8"/><polygon points="330,707 320,712 327,718" fill="'+INK+'"/>';
+  s+='<line x1="288" y1="752" x2="288" y2="720" stroke="'+INK+'" stroke-width="1.3" stroke-dasharray="3 2"/>';
+  s+='<rect x="336" y="714" width="26" height="22" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/><line x1="336" y1="736" x2="362" y2="714" stroke="'+INK+'" stroke-width="1.4"/>';
+  s+='<circle id="dbwLed" cx="349" cy="746" r="5" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.5"/>';
+  s+='<rect id="dbwPin" class="svg-hit" data-svg-act="pin" x="360" y="719" width="11" height="12" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.4"><title>Bấm để Khóa/Nhả chốt tay cơ khí coil YV0</title></rect>';
+  s+='<text x="372" y="712" font-size="10.5" font-weight="700">DBW · YV0</text><text id="dbwT1" x="372" y="726" font-size="10" font-family="Consolas,monospace"></text><text id="dbwT2" x="372" y="740" font-size="10" font-weight="700" font-family="Consolas,monospace"></text><text id="dbwT3" x="372" y="754" font-size="10" font-family="Consolas,monospace" fill="#2C68B0"></text>';
+  s+='<path d="M362,714 V698 H480" fill="none" stroke="'+INK+'" stroke-width="1.2" stroke-dasharray="5 4"/>';
+  // motor + bơm
+  s+='<line x1="192" y1="735" x2="216" y2="735" stroke="'+INK+'" stroke-width="4"/>';
+  s+='<g class="svg-hit" data-svg-act="motor"><title>Bấm để Khởi động / Dừng Motor M</title><circle id="motorC" cx="170" cy="735" r="22" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2.5"/><text x="170" y="741" text-anchor="middle" font-size="16" font-weight="700">M</text></g>';
+  s+='<text id="motorT" x="20" y="768" font-size="9.5" font-family="Consolas,monospace"></text><text id="motorT2" x="20" y="781" font-size="9.5" font-family="Consolas,monospace"></text>';
+  s+='<circle id="pumpC" cx="240" cy="735" r="24" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2.5"/><polygon points="240,714 233,726 247,726" fill="'+INK+'"/>';
+  s+='<text id="pumpT" x="196" y="700" font-size="9.5" fill="#C8372D" font-weight="700"></text>';
+  s+=pipe('pS','M240,759 V868','S',null);
+  s+=pipe('pS2','M240,774 H227','S',null,3);
+  s+='<circle cx="203" cy="774" r="24" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2.2"/>';
+  [-1,-0.5,0,0.5,1].forEach(v=>{const a=v*120*Math.PI/180;s+='<line x1="'+(203+22*Math.sin(a)).toFixed(1)+'" y1="'+(774-22*Math.cos(a)).toFixed(1)+'" x2="'+(203+16*Math.sin(a)).toFixed(1)+'" y2="'+(774-16*Math.cos(a)).toFixed(1)+'" stroke="'+(v<-0.25?'#C8372D':INK)+'" stroke-width="1.5"/>';});
+  s+='<line id="gVacN" x1="203" y1="774" x2="203" y2="754" stroke="#2E8B57" stroke-width="2.6" stroke-linecap="round" transform="rotate(0 203 774)"/><circle cx="203" cy="774" r="3.5" fill="'+INK+'"/><text id="gVacT" x="203" y="791" text-anchor="middle" font-size="10.5" font-weight="700" font-family="Consolas,monospace">0</text><text x="203" y="768" text-anchor="middle" font-size="8.5" font-weight="700" fill="#4A5561">VAC</text>';
+  // đường hồi
+  s+=tpSVG('MT',1220,690,1230,694,'đường hồi chung / cổng T của DBW');
+  s+=bowtie('bvR',1220,722);
+  s+='<text x="1232" y="726" font-size="9" fill="#4A5561">VB hồi</text>';
+  s+=pipe('pNR','M1220,732 V743','NR','qF',5);
+  s+=tpSVG('MR',1220,738,1190,741,'trước lọc hồi (sau van bi hồi)');
+  s+='<polygon points="1220,743 1232,755 1220,767 1208,755" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/><line x1="1210" y1="755" x2="1230" y2="755" stroke="'+INK+'" stroke-width="1.3" stroke-dasharray="3 2"/>';
+  s+='<circle id="fInd" cx="1248" cy="755" r="6" fill="#2E8B57" stroke="'+INK+'" stroke-width="1.5"/><text x="1258" y="752" font-size="9.5">Lọc hồi 10 µm</text><text id="fT" x="1258" y="765" font-size="9.5" font-family="Consolas,monospace">ΔPf 0</text>';
+  s+=pipe('pTk','M1220,767 V880','TK','qF',5);
+  // tủ điện
+  s+='<rect x="480" y="666" width="330" height="110" rx="4" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/><text x="490" y="682" font-size="11" font-weight="700">TỦ ĐIỆN · PLC (logic giả định)</text>';
+  const leds=[['lX0','X0 KM chạy'],['lX1','X1 công tắc V1'],['lX2','X2 công tắc V2'],['lX3','X3 công tắc V3'],['lX4','X4 E-stop OK'],['lY0','Y0 → KA → YV0']];
+  leds.forEach((l,k)=>{const y=698+k*14;s+='<circle id="'+l[0]+'" cx="496" cy="'+(y-3)+'" r="4.5" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.3"/><text x="506" y="'+y+'" font-size="9.5" font-family="Consolas,monospace">'+l[1]+'</text>';});
+  s+='<text id="cabT1" x="640" y="698" font-size="9.5" font-family="Consolas,monospace"></text><text id="cabT2" x="640" y="712" font-size="9.5" font-family="Consolas,monospace"></text><text id="cabT3" x="640" y="726" font-size="9.5" font-family="Consolas,monospace"></text><text id="cabT4" x="640" y="740" font-size="9.5" font-family="Consolas,monospace"></text><text id="cabT5" x="640" y="754" font-size="9.5" font-family="Consolas,monospace"></text><text id="cabT6" x="640" y="768" font-size="9.5" font-family="Consolas,monospace"></text>';
+  // thùng
+  s+='<rect x="70" y="800" width="1180" height="128" fill="#FFFFFF" stroke="'+INK+'" stroke-width="3"/>';
+  s+='<rect id="oil" x="73" y="820" width="1174" height="105" fill="#F3DEB0"/>';
+  s+='<rect id="foam" x="73" y="818" width="1174" height="6" fill="url(#hatch)" style="display:none"/>';
+  s+='<polygon points="240,860 252,872 240,884 228,872" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/><text x="258" y="876" font-size="9.5">Lọc hút 125 µm</text>';
+  s+='<rect x="694" y="789" width="16" height="11" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.5"/><text x="714" y="816" font-size="9.5" fill="#4A5561">nắp châm + lọc thở</text>';
+  s+='<rect x="1186" y="812" width="16" height="106" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"/><rect id="lvl" x="1188" y="830" width="12" height="86" fill="#C98A1C"/>';
+  s+='<line id="mkMax" x1="1182" y1="822" x2="1206" y2="822" stroke="#2E8B57" stroke-width="2"/><line id="mkMin" x1="1182" y1="870" x2="1206" y2="870" stroke="#C8372D" stroke-width="2"/><text x="1210" y="826" font-size="8.5">MAX</text><text x="1210" y="874" font-size="8.5">MIN</text>';
+  s+='<text x="420" y="898" font-size="13" font-weight="700" id="tankLbl">THÙNG DẦU</text><text id="tankT" x="420" y="916" font-size="10.5" font-family="Consolas,monospace"></text>';
+  s+='<text x="960" y="842" font-size="10" font-weight="700">TT nhiệt độ dầu</text><text id="tempT" x="960" y="866" font-size="22" font-weight="700" font-family="Consolas,monospace">32 °C</text><text id="lvlT" x="960" y="884" font-size="10" font-family="Consolas,monospace"></text>';
+  s+='<g id="tpProbe" pointer-events="none"><circle id="tpProbeC" cx="368" cy="590" r="9.5" fill="none" stroke="#D9822B" stroke-width="2.5" stroke-dasharray="3 2"/><rect id="tpProbeBg" x="380" y="575" width="76" height="17" rx="4" fill="#FFF8EB" stroke="#D9822B" stroke-width="1.3"/><text id="tpProbeT" x="418" y="587" text-anchor="middle" font-size="9.5" font-weight="700" font-family="Consolas,monospace" fill="#9A4A0E">MG: 0,0</text></g>';
+  document.getElementById('sch').innerHTML=s;
+}
+buildSVG();
+const $=id=>document.getElementById(id);
+const PE=PIPES.map(p=>({id:p.id,el:$(p.id),fl:p.fkey?$(p.id+'F'):null,node:p.node,fkey:p.fkey,off:0}));
+function nodeP(nm){
+  if(nm==='NP') return Pn[NP]; if(nm==='NG') return Pn[NG]; if(nm==='NT') return Pn[NT]; if(nm==='NR') return Pn[NR];
+  if(nm==='DR') return PAR.dbwDrain==='filter'?Pn[NT]:0; if(nm==='DRT') return 0; if(nm==='TK') return 0; if(nm==='S') return S.pin;
+  const i=+nm.slice(2); const t=nm.slice(0,2); return t==='AC'?Pn[iAC(i)]:t==='BC'?Pn[iBC(i)]:t==='AV'?Pn[iAV(i)]:Pn[iBV(i)];
+}
+function flowOf(k){
+  if(k==='qCV') return S.qCV; if(k==='qp') return S.Qp; if(k==='qRel') return S.qRel; if(k==='qF') return S.qF+S.qBy;
+  if(k==='qRet') return S.qF+S.qBy-(PAR.dbwDrain==='filter'?S.qRel:0);
+  const i=+k.slice(3), t=k.slice(1,3);
+  if(t==='AC') return -(K.Ac*S.v[i]+S.qSeal[i]);
+  if(t==='BC') return K.Ar*S.v[i]+S.qSeal[i]-(i===2?(S.qHose||0):0)-(i===1&&S.faults.rod2?S.qExt:0);
+  if(t==='AV') return -S.qAvin[i]; if(t==='BV') return -S.qBvin[i];
+  if(t==='PV') return -S.qPi[i]; if(t==='TV') return S.qTi[i];
+  return 0;
+}
+
+/* =========================================================
+   VẼ CẬP NHẬT
+   ========================================================= */
+const f0=(x)=>Math.round(x).toLocaleString('vi-VN');
+const fx=(x,d)=>{let t=x.toFixed(d); if(/^-0[.,]?0*$/.test(t)) t=t.slice(1); return t.replace('.',',').replace('-','−');};
+function setN(id,v,max,cx,cy){const e=$(id+'N'); if(!e) return; const a=-120+240*clamp(v,0,max)/max; e.setAttribute('transform','rotate('+a.toFixed(1)+' '+cx+' '+cy+')');}
+let lastText=0;
+function render(dtf){
+  const F=S.faults;
+  // ống
+  for(const p of PE){
+    const hid=(p.id==='pDrF'&&PAR.dbwDrain!=='filter')||(p.id==='pDrT'&&PAR.dbwDrain==='filter')||(p.id.startsWith('pBL')&&PAR.cbv!=='yes');
+    p.el.style.display=hid?'none':''; if(hid){if(p.fl)p.fl.style.display='none';continue;}
+    const pr=nodeP(p.node);
+    const idle=Math.abs(pr)<0.3e5&&!S.km;
+    p.el.setAttribute('stroke', p.node==='S'?(S.pin<-0.05e5?'#2E8B57':(S.pin>0.05e5?'#C8372D':'#9CC8AE')):(p.node==='TK'||p.node==='DRT'?(S.km?'#7E9CC2':'#B3BCC6'):(idle?'#B3BCC6':pcol(pr))));
+    if(p.fl){const q=flowOf(p.fkey)*LPM; if(Math.abs(q)>0.3){p.fl.style.display=''; p.off-=q*dtf*2.2; p.fl.setAttribute('stroke-dashoffset',p.off.toFixed(1));} else p.fl.style.display='none';}
+  }
+  // xi lanh
+  for(let i=0;i<3;i++){
+    const c=CX[i], py=16+S.x[i]/K.L*125;
+    $('pis'+i).setAttribute('y',py.toFixed(1));
+    $('rod'+i).setAttribute('y',(py+10).toFixed(1));
+    $('chA'+i).setAttribute('height',Math.max(0,py-13).toFixed(1));
+    $('chB'+i).setAttribute('y',(py+10).toFixed(1)); $('chB'+i).setAttribute('height',Math.max(0,167-py-10).toFixed(1));
+    $('chA'+i).setAttribute('fill',pcol(Pn[iAC(i)])); $('chB'+i).setAttribute('fill',pcol(Pn[iBC(i)]));
+    $('tool'+i).setAttribute('transform','translate(0,'+(py+10+RODL[i]).toFixed(1)+')');
+    $('cutGap'+i).style.display=(i<2&&S.cutDone[i])?'':'none';
+    $('vg'+i).setAttribute('transform','translate('+(52*S.u[i]).toFixed(1)+',0)');
+    if(i<2) $('cbv'+i).style.display=PAR.cbv==='yes'?'':'none';
+    $('cC'+i).style.display=PAR.center==='abt'?'none':''; $('cO'+i).style.display=PAR.center==='abt'?'':'none';
+    const k=S.u[i]>0.5?0:(S.u[i]<-0.5?2:1);
+    for(let b=0;b<3;b++) $('vb'+i+'_'+b).setAttribute('fill',b===k?'#FFF1DC':'#FFFFFF');
+    $('ms'+i).setAttribute('fill',S.X[i]?'#2E8B57':'#FFFFFF');
+    const bf=S.ball[i]?'#FFFFFF':'#C8372D';
+    $('bvA'+i).querySelectorAll('polygon').forEach(e=>e.setAttribute('fill',bf)); $('bvB'+i).querySelectorAll('polygon').forEach(e=>e.setAttribute('fill',bf));
+    setN('gG'+i,S.gG[i]/BAR,250,c+14,420);
+    $('det'+i).setAttribute('stroke',(i===2&&F.detent3&&(!S.hidden||S.reveal))?'#C8372D':INK);
+    $('drip'+i).style.display=((i===2&&F.hose3)||(i===1&&F.rod2))?'':'none';
+  }
+  setN('gP0',S.gP0/BAR,250,68,690);
+  $('gVacN').setAttribute('transform','rotate('+(clamp(S.gVac/1e5,-1,1)*120).toFixed(1)+' 203 774)');
+  $('dbwLed').setAttribute('fill',S.plugV>0?'#F2C230':'#FFFFFF');
+  $('dbwPin').setAttribute('fill',S.ovr?'#D9822B':'#FFFFFF');
+  $('isoSym').setAttribute('fill',S.iso?'#FFFFFF':'#C8372D');
+  $('motorC').setAttribute('fill',S.km?'#E4F2EA':(S.olTrip?'#FBE9E7':'#FFFFFF'));
+  $('pumpC').setAttribute('stroke',(S.cav||S.air>0.03||F.rev&&S.n>100)?'#C8372D':INK);
+  $('fInd').setAttribute('fill',Pn[NR]>2.0e5?'#C8372D':'#2E8B57');
+  ['lX0','lX1','lX2','lX3','lX4'].forEach((id,k)=>{const on=k===0?S.km:k===4?!S.estop:S.X[k-1];$(id).setAttribute('fill',on?'#2E8B57':'#FFFFFF');});
+  $('lY0').setAttribute('fill',S.Y0?'#F2C230':'#FFFFFF');
+  // thùng
+  const lvlF=clamp((S.Vtank)/(PAR.tankL*1e-3),0,1);
+  const oh=Math.round(122*lvlF); $('oil').setAttribute('y',925-oh); $('oil').setAttribute('height',oh);
+  $('foam').style.display=S.air>0.03?'':'none'; $('foam').setAttribute('y',925-oh-3);
+  const gh=Math.round(104*lvlF); $('lvl').setAttribute('y',917-gh); $('lvl').setAttribute('height',gh);
+  $('mkMax').setAttribute('y1',917-104*0.9); $('mkMax').setAttribute('y2',917-104*0.9); $('mkMin').setAttribute('y1',917-104*0.6); $('mkMin').setAttribute('y2',917-104*0.6);
+  // chữ (10 Hz)
+  const now=performance.now(); if(now-lastText<100) return; lastText=now;
+  $('clock').textContent='t = '+fx(S.t,1)+' s';
+  for(let i=0;i<3;i++){
+    $('gG'+i+'T').textContent=f0(S.gG[i]/BAR);
+    $('gGL'+i).textContent='G'+(i+1)+' · đo '+S.gsel[i];
+    $('cylT'+i).textContent='x '+f0(S.x[i]*1000)+' mm';
+    const va=S.vAvg[i];
+    $('cylT2'+i).textContent=(Math.abs(S.u[i])<0.1&&Math.abs(va)>1e-4&&Math.abs(va)<3e-3)?('trôi '+fx(va*1000*60,0)+' mm/ph'):('v '+fx(S.v[i]*1000,0)+' mm/s');
+    $('toolM'+i).textContent=f0(S.mass[i])+' kg';
+    $('vpos'+i).textContent='V'+(i+1)+' · '+(S.u[i]>0.5?'TIẾN ▼':S.u[i]<-0.5?'LÙI ▲':'GIỮA');
+    $('vpos'+i).setAttribute('fill',Math.abs(S.u[i])>0.5?'#C8372D':INK);
+    $('bvT'+i).textContent=S.ball[i]?'VB'+(i+1):'KHÓA';
+    $('bvT'+i).setAttribute('fill',S.ball[i]?'#4A5561':'#C8372D');
+  }
+  $('gP0T').textContent=f0(S.gP0/BAR);
+  $('gVacT').textContent=fx(S.gVac/1e5,2);
+  $('dbwT1').textContent='núm '+S.relSet+' bar';
+  $('dbwT2').textContent=S.n>100?(S.press?'CÓ ÁP':'XẢ TẢI'):'';
+  $('dbwT2').setAttribute('fill',S.press?'#C8372D':'#2C68B0');
+  $('dbwT3').textContent=S.qRel*LPM>0.5?'xả '+fx(S.qRel*LPM,1)+' L/ph':'';
+  $('motorT').textContent=PAR.motorKW+' kW · '+f0(S.n)+' v/ph'; $('motorT2').textContent='I = '+fx(S.I,1)+' A';
+  $('pumpT').textContent=(S.cav||S.air>0.03)?'RÍT/ỒN':((F.rev&&S.n>100)?'KÊU LẠ':'');
+  $('fT').textContent='ΔPf '+fx(Math.max(0,Pn[NR])/BAR,1)+' bar';
+  $('cabT1').textContent='KM  '+(S.km?'ĐÓNG':'MỞ');
+  $('cabT2').textContent='OL  '+(S.olTrip?'ĐÃ NHẢY':f0(Math.sqrt(Math.max(0,S.olTh))*100)+' % nhiệt');
+  $('cabT3').textContent='KA  '+(S.Y0?'HÚT':'NHẢ');
+  $('cabT4').textContent='giắc '+fx(S.plugV,1)+' V';
+  $('cabT5').textContent='A   '+fx(S.I,1)+' A';
+  $('cabT6').textContent='trễ '+fx(S.offT,1)+' s';
+  $('tankLbl').textContent='THÙNG DẦU '+PAR.tankL+' L · ISO '+PAR.oil;
+  $('tankT').textContent='dầu '+fx(S.Vtank*1000,1)+' L · nhớt '+fx(S.mu*46,0)+' cSt'+(S.air>0.03?' · có bọt khí':'');
+  $('tempT').textContent=fx(S.Toil,0)+' °C'; $('tempT').setAttribute('fill',S.Toil>60?'#C8372D':INK);
+  $('lvlT').textContent='LT mức '+f0(lvlF*100)+' % '+(S.Vtank<K.Vmin?'< MIN':'');
+  const tpp=TP_POS[S.tp];
+  if(tpp&&$('tpProbeC')){
+    const [tx,ty]=tpp, leftSide=tx>1100;
+    $('tpProbeC').setAttribute('cx',tx); $('tpProbeC').setAttribute('cy',ty);
+    const bx=leftSide?(tx-88):(tx+12), by=ty-15;
+    $('tpProbeBg').setAttribute('x',bx); $('tpProbeBg').setAttribute('y',by);
+    $('tpProbeT').setAttribute('x',bx+38); $('tpProbeT').setAttribute('y',by+12);
+    $('tpProbeT').textContent=S.tp+': '+fx(S.tpVal/BAR,1);
+  }
+  updatePanels();
+}
+
+/* =========================================================
+   BẢNG ĐIỀU KHIỂN
+   ========================================================= */
+function tile(k,v,bad){return '<div class="tile'+(bad?' bad':'')+'"><div class="k">'+k+'</div><div class="v mono">'+v+'</div></div>';}
+function buildStations(){
+  let h='';
+  for(let i=0;i<3;i++){
+    h+='<div class="st"><div class="row" style="justify-content:space-between"><span class="ttl">V'+(i+1)+' · '+NAMES[i]+' '+ROLES[i].toLowerCase()+'</span>'+
+      '<span class="seg"><button class="b sm" data-lv="'+i+'" data-d="-1">▲ Lùi</button><button class="b sm" data-lv="'+i+'" data-d="0">Giữa</button><button class="b sm" data-lv="'+i+'" data-d="1">Tiến ▼</button></span></div>'+
+      '<div class="row"><span class="muted">Van bi VB'+(i+1)+'</span><button class="b sm" data-ball="'+i+'">Mở</button>'+
+      '<span class="muted" style="margin-left:8px">Đồng hồ G'+(i+1)+'</span><span class="seg"><button class="b sm" data-gs="'+i+'" data-v="A">A</button><button class="b sm" data-gs="'+i+'" data-v="B">B</button></span>'+
+      '<span class="muted mono" id="stInfo'+i+'" style="margin-left:8px"></span></div>'+
+      '<div class="row"><span class="muted">Tải đầu ty (khối lượng cụm '+(i<2?'dao':'nhấn')+')</span><button class="b sm" data-ms="'+i+'" data-d="-20" aria-label="Giảm tải">−</button><span class="mono" id="mTxt'+i+'" style="min-width:64px;text-align:center;font-weight:700"></span><button class="b sm" data-ms="'+i+'" data-d="20" aria-label="Tăng tải">+</button><span class="muted mono" id="mInfo'+i+'"></span></div></div>';
+  }
+  $('stations').innerHTML=h;
+}
+buildStations();
+function buildTp(){ $('selTp').innerHTML=TPS.map(t=>'<option value="'+t[0]+'"'+(t[0]===S.tp?' selected':'')+'>'+t[1]+'</option>').join(''); }
+buildTp();
+function buildFaults(){
+  let h='';
+  ZONES.forEach(z=>{h+='<div class="zone">'+z[1]+'</div><div class="chips">'; FAULTS.filter(f=>f.z===z[0]).forEach(f=>{h+='<button class="chip" data-f="'+f.id+'">'+f.n+'</button>';}); h+='</div>';});
+  $('faultList').innerHTML=h;
+}
+buildFaults();
+function buildDiag(){
+  let h='<tr><th>Vùng</th><th>Lỗi</th><th>Triệu chứng</th><th>Xác nhận</th><th>Xử lý</th></tr>';
+  FAULTS.forEach(f=>{h+='<tr><td class="mono"><b>'+f.z+'</b></td><td><b>'+f.n+'</b></td><td>'+f.s+'</td><td>'+f.t+'</td><td>'+f.f+'</td></tr>';});
+  $('diagTable').innerHTML=h;
+}
+buildDiag();
+function buildParForm(){
+  let h='', nAs=0, nVer=0;
+  PARF.forEach(r=>{
+    if(r[0]==='g'){h+='<div class="gt">'+r[1]+'</div>';return;}
+    const [k,l,u,mn,mx,st,as]=r;
+    const isVer=!!VER[k];
+    if(as){if(isVer) nVer++; else nAs++;}
+    let inp;
+    if(Array.isArray(mn)) inp='<select data-par="'+k+'">'+mn.map(o=>'<option value="'+o+'"'+(PAR[k]===o?' selected':'')+'>'+({filter:'qua lọc hồi',tank:'thẳng về thùng',no:'không có',yes:'có',closed:'tâm đóng (P,A,B,T chặn)',abt:'tâm A,B→T (P chặn)'}[o]||o)+'</option>').join('')+'</select>';
+    else inp='<input type="number" data-par="'+k+'" value="'+PAR[k]+'" min="'+mn+'" max="'+mx+'" step="'+st+'">';
+    const badge=as?(isVer?' <span class="ok-tag" title="Đã đối chiếu thực tế">ĐĐC</span>':' <span class="as" title="Giá trị giả định">GĐ</span>'):' <span class="ok-tag">Chuẩn</span>';
+    h+='<label for="par_'+k+'">'+l+badge+'</label>'+inp.replace('data-par','id="par_'+k+'" data-par')+'<span class="muted">'+u+'</span>';
+  });
+  $('parForm').innerHTML=h;
+  const sw=$('parSurveyWarn');
+  if(sw){
+    if(nAs===0){
+      sw.className='info-box';
+      sw.innerHTML='<b>✔ Hồ sơ máy đã đối chiếu thực tế ('+nVer+'/'+nVer+' thông số):</b> Các thông số bơm ('+PAR.pumpCC+' cc/v), xi lanh ('+PAR.bore+'/'+PAR.rod+'×'+PAR.stroke+' mm), dao ('+PAR.massCut+' kg), lực cắt quy chiếu ('+PAR.cutRef+' kN), áp tuần hoàn ('+PAR.ventP+' bar) đã khớp với máy thực tế để chẩn đoán.';
+    } else {
+      sw.className='warn-box';
+      sw.innerHTML='<b>⚠ Lưu ý trước khi đối chiếu với máy thật (còn '+nAs+' thông số giả định <span class="as">GĐ</span>):</b> Các số <b>Bơm '+PAR.pumpCC+' cc/v</b>, <b>Xi lanh '+PAR.bore+'/'+PAR.rod+'×'+PAR.stroke+' mm</b>, <b>Dao '+PAR.massCut+' kg</b>, <b>Lực cắt quy chiếu '+PAR.cutRef+' kN</b>, <b>Áp tuần hoàn '+PAR.ventP+' bar</b> đang là giả định. Chỉ cần khác đường kính lòng xi lanh (bore) hoặc lưu lượng bơm là <b>toàn bộ tốc độ, áp cắt và thời gian chu kỳ sẽ khác theo</b>.<br>👉 Mở bảng <b>Công cụ quy đổi nhanh từ số đo thực tế</b> bên dưới hoặc sửa trực tiếp theo nhãn máy rồi bấm <b>Áp dụng</b>.';
+    }
+  }
+}
+buildParForm();
+function buildDerived(){
+  const D=PAR, b=x=>fx(x,1);
+  const Fp=(p)=>K.Ac*p*BAR/1000, Fr=(p)=>K.Ar*p*BAR/1000;
+  const vE=K.Qr/K.Ac*1000, vR=K.Qr/K.Ar*1000;
+  const Preq=D.relSet*BAR*K.Qr/(0.85)/1000;
+  const pcut=(K.Fcut+300-K.mass[0]*GRAV)/K.Ac/BAR;
+  const rows=[
+    ['Lưu lượng bơm lý thuyết',fx(K.Qr*LPM,1)+' L/ph (ηv ≈ 0,95 ở 140 bar, 40 °C → '+fx(K.Qr*LPM*0.95,1)+' L/ph)'],
+    ['Công suất cần ở áp núm',fx(Preq,2)+' kW / motor '+D.motorKW+' kW'],
+    ['Diện tích đáy / vành',fx(K.Ac*1e4,1)+' / '+fx(K.Ar*1e4,1)+' cm² · tỉ số '+fx(K.Ac/K.Ar,2)],
+    ['Lực đẩy / kéo ở '+D.relSet+' bar',fx(Fp(D.relSet),1)+' / '+fx(Fr(D.relSet),1)+' kN'],
+    ['Lực đẩy / kéo ở 120 bar',fx(Fp(120),1)+' / '+fx(Fr(120),1)+' kN'],
+    ['Tốc độ tiến / lùi lý thuyết',fx(vE,0)+' / '+fx(vR,0)+' mm/s · '+fx(D.stroke/vE,1)+' / '+fx(D.stroke/vR,1)+' s cả hành trình'],
+    ['Áp giữ dao bằng trọng lượng (phía ty)',fx(K.mass[0]*GRAV/K.Ar/BAR,1)+' bar'],
+    ['Lực cắt ước tính (tôn đang chọn)',fx(K.Fcut/1000,1)+' kN → áp cắt ≈ '+fx(pcut,0)+' bar'],
+    ['Áp nghỉ (xả tải) chuẩn','≈ '+fx(D.ventP+2.8,1)+' bar ở lưu lượng định mức'],
+    ['Áp chặn (cuối hành trình)','≈ '+fx(D.relSet+7.2*Math.min(1.2,K.Qr/2.9e-4),0)+' bar (núm + quá áp dòng chảy ~7 bar)'],
+    ['Thùng / lưu lượng','≈ '+fx(D.tankL/(K.Qr*LPM),1)+' × Q (chuẩn 3–5 ×)'],
+    ['Nhiệt sinh ra khi chặn liên tục','≈ '+fx(D.relSet*BAR*K.Qr/1000,2)+' kW → tăng '+fx(D.relSet*BAR*K.Qr/K.Cth*60,1)+' °C/phút'],
+    ['Nhiệt độ cân bằng lúc nghỉ','≈ '+fx(D.ambient+((D.ventP+2.2)*BAR*K.Qr/0.88+150)/D.kA,0)+' °C (không két làm mát)'],
+    ['Độ nhớt ở 40 / 60 °C',fx(visc(40,D.oil),0)+' / '+fx(visc(60,D.oil),0)+' cSt']
+  ];
+  $('derived').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="mono">'+r[1]+'</td></tr>').join('');
+  const w=[];
+  if(Preq>D.motorKW) w.push('Motor có thể quá tải khi giữ áp ở '+D.relSet+' bar (cần '+fx(Preq,1)+' kW).');
+  if(D.rod>=D.bore) w.push('Đường kính ty phải nhỏ hơn piston.');
+  if(D.tankL/(K.Qr*LPM)<3) w.push('Thùng nhỏ hơn 3 × lưu lượng phút: dầu dễ nóng, khó tách bọt.');
+  if(pcut>D.relSet-15) w.push('Áp cắt ước tính sát hoặc vượt áp núm: dao có thể không cắt đứt.');
+  if(D.olSet>D.motorIn*1.1) w.push('Rơ-le nhiệt chỉnh cao hơn 1,1 × In: không bảo vệ được motor.');
+  $('parWarn').innerHTML=w.length?w.map(x=>'<div class="warn">• '+x+'</div>').join(''):'<span class="muted">Không có cảnh báo.</span>';
+}
+buildDerived();
+function updateLegend(){
+  const st=[['#B3BCC6','0 bar'],[pcol(3*BAR),'3'],[pcol(20*BAR),'20'],[pcol(80*BAR),'80'],[pcol(140*BAR),'140'],[pcol(220*BAR),'≥ 200'],['#2E8B57','chân không']];
+  $('legend').innerHTML='<span><b>Màu áp suất:</b></span>'+st.map(s=>'<span><i style="background:'+s[0]+'"></i>'+s[1]+'</span>').join('')+'<span>· vạch trắng chạy = có dòng dầu</span>';
+}
+updateLegend();
+
+function updatePanels(){
+  const F=S.faults, hide=S.hidden&&!S.reveal;
+  // vận hành
+  $('motorKv').innerHTML=tile('Contactor KM',S.km?'ĐÓNG':'MỞ',false)+tile('Rơ-le nhiệt',S.olTrip?'ĐÃ NHẢY':'bình thường',S.olTrip)+tile('E-stop',S.estop?'ĐANG NHẤN':'nhả',S.estop)+tile('Tốc độ motor',f0(S.n)+' v/ph',false)+tile('Dòng motor',fx(S.I,1)+' A',S.I>PAR.motorIn*1.05&&S.n>0.9*K.nSync)+tile('Công suất trục',fx(S.Psh/1000,2)+' kW',S.Psh>PAR.motorKW*1000);
+  $('bEstop').textContent=S.estop?'NHẢ DỪNG KHẨN':'DỪNG KHẨN';
+  $('knobTxt').textContent=S.relSet+' bar';
+  $('knobTurn').textContent='≈ '+fx(S.relSet/35,1)+' vòng từ hết lỏng';
+  $('dbwKv').innerHTML=tile('Đèn Y0 PLC',S.Y0?'SÁNG':'tắt',false)+tile('LED giắc coil',S.plugV>0?'SÁNG':'tắt',false)+tile('Chốt tay',S.ovr?'ĐANG ẤN':'nhả',false)+tile('Trạng thái van',S.n>100?(S.press?'giữ áp':'xả tải'):'—',false)+tile('P0 (đồng hồ)',f0(S.gP0/BAR)+' bar',false)+tile('Xả qua DBW',fx(S.qRel*LPM,1)+' L/ph',false);
+  $('bPin').className='b'+(S.ovrHold?' amber':'');
+  for(let i=0;i<3;i++){
+    document.querySelectorAll('[data-lv="'+i+'"]').forEach(b=>{b.classList.toggle('on',+b.dataset.d===S.cmd[i]);});
+    const bb=document.querySelector('[data-ball="'+i+'"]'); bb.textContent=S.ball[i]?'Mở':'Khóa'; bb.className='b sm'+(S.ball[i]?'':' red');
+    document.querySelectorAll('[data-gs="'+i+'"]').forEach(b=>b.classList.toggle('on',b.dataset.v===S.gsel[i]));
+    $('stInfo'+i).textContent='x '+f0(S.x[i]*1000)+' mm · G'+(i+1)+' '+f0(S.gG[i]/BAR)+' bar';
+    $('mTxt'+i).textContent=f0(S.mass[i])+' kg'; $('mInfo'+i).textContent='→ áp đỡ phía ty ≈ '+fx(S.mass[i]*GRAV/K.Ar/BAR,1)+' bar';
+  }
+  const pcut=(K.Fcut+300-K.mass[0]*GRAV)/K.Ac/BAR;
+  $('cutInfo').textContent='Lực cắt ước tính '+fx(K.Fcut/1000,1)+' kN (quy chiếu '+PAR.cutRef+' kN cho 0,45 G550) → áp đáy khi cắt ≈ '+fx(pcut,0)+' bar. Nhấn: chạm tôn ở '+PAR.pressX+' mm, giữ ở áp núm.';
+  // đo kiểm
+  const lvlF=S.Vtank/(PAR.tankL*1e-3);
+  $('measKv').innerHTML=tile('P0 đồng hồ bơm',f0(S.gP0/BAR)+' bar',false)+tile('VAC đường hút',fx(S.gVac/1e5,2)+' bar',S.gVac<-0.25e5||S.gVac>0.1e5)+tile('Chỉ báo lọc hồi',Pn[NR]>2e5?'ĐỎ':'xanh',Pn[NR]>2e5)+
+    tile('Nhiệt độ dầu',fx(S.Toil,1)+' °C',S.Toil>60)+tile('Mức dầu',fx(S.Vtank*1000,1)+' L · '+f0(lvlF*100)+' %',S.Vtank<K.Vmin)+tile('Mắt thăm',S.air>0.03?'đục, có bọt':'trong',S.air>0.03)+
+    tile('Dòng motor',fx(S.I,1)+' A',false)+tile('Tốc độ motor',f0(S.n)+' v/ph',false)+tile('Tiếng bơm',(S.cav||S.air>0.03)?'rít/ồn':((F.rev&&S.n>100)?'kêu lạ':(S.n>100?'bình thường':'—')),S.cav||S.air>0.03||(F.rev&&S.n>100));
+  const tpNode=TPMAP[S.tp];
+  $('tpVal').textContent=fx(S.tpVal/BAR,1)+' bar'; $('tpPeak').textContent=fx(S.tpPeak/BAR,1)+' bar'; $('tpMin').textContent=fx(S.tpMin/BAR,1)+' bar';
+  const mm=$('selMm').value; let mv='—';
+  if(mm==='plug') mv=fx(S.plugV>0?24.1:0,1)+' V'; else if(mm==='coil') mv=F.coil?'OL (hở)':fx(19.2*(1+0.0039*(S.Toil-20)),1)+' Ω'; else if(mm==='psu') mv='24,2 V'; else mv=fx(S.I,1)+' A';
+  $('mmVal').textContent=mv;
+  $('flowKv').innerHTML=tile('Q ra bơm',fx(S.Qp*LPM-K.Gpl0*(F.pump?9:1)/S.mu*Pn[NP]*LPM,1)+' L/ph',false)+tile('Q vào block (P)',fx(S.qCV*LPM,1)+' L/ph',false)+tile('Q xả DBW',fx(S.qRel*LPM,1)+' L/ph',false)+tile('Q qua lọc hồi',fx(S.qF*LPM,1)+' L/ph',false)+tile('Q bypass lọc hồi',fx(S.qBy*LPM,1)+' L/ph',S.qBy*LPM>0.5)+tile('Rò ra ngoài',fx(S.qExt*LPM,2)+' L/ph · tổng '+fx(S.Vleak*1000,2)+' L',S.qExt*LPM>0.05);
+  let t='<tr><th>Trạm</th><th>x mm</th><th>v mm/s (trôi)</th><th>G bar</th><th>MA bar</th><th>MB bar</th><th>Áp đỉnh cắt</th><th>Rò piston L/ph</th><th>Rò trong van L/ph</th></tr>';
+  for(let i=0;i<3;i++){
+    const atEnd=(S.u[i]>0.5&&S.x[i]>=K.L-1e-4)||(S.u[i]<-0.5&&S.x[i]<=1e-4);
+    const bypV=Math.abs(S.qSeal[i])*LPM;
+    const byp=atEnd&&S.ball[i]&&S.km?'<span class="'+(bypV>0.2?'meas-bad':'meas-ok')+'">'+fx(bypV,2)+(bypV>0.2?' (RÒ!)':' (OK)')+'</span>':'<span class="meas-hint" title="Bấm nút Đo Bypass Piston bên dưới hoặc gạt giữ kịch cuối hành trình">Cần giữ gạt cuối HT</span>';
+    const vlvCond=!S.ball[i]&&Math.abs(S.u[i])<0.1&&Pn[NG]>50e5;
+    const vlvV=vlvCond?(((i===1&&F.spool2?6e-12:3.3e-14)/S.mu)*Math.max(0,Pn[NG]-Pn[NT])*LPM):0;
+    const vlv=vlvCond?'<span class="'+(vlvV>0.1?'meas-bad':'meas-ok')+'">'+fx(vlvV,2)+(vlvV>0.1?' (RÒ!)':' (OK)')+'</span>':'<span class="meas-hint" title="Bấm nút Đo Rò trong Van bên dưới hoặc Khóa VB + Chốt coil">Cần khóa VB + chốt coil</span>';
+    const va=S.vAvg[i];
+    const vStr=(Math.abs(S.u[i])<0.1&&Math.abs(va)>1e-4&&Math.abs(va)<3e-3)?(fx(va*1000,2)+' ('+fx(va*1000*60,0)+' mm/ph)'):fx(S.v[i]*1000,0);
+    t+='<tr><td><b>'+NAMES[i]+'</b></td><td>'+f0(S.x[i]*1000)+'</td><td>'+vStr+'</td><td>'+f0(S.gG[i]/BAR)+'</td><td>'+fx(Math.max(0,Pn[iAV(i)])/BAR,1)+'</td><td>'+fx(Math.max(0,Pn[iBV(i)])/BAR,1)+'</td><td>'+(i<2?(S.lastPk[i]>0?fx(S.lastPk[i]/BAR,0)+' bar · '+S.cuts[i]+' lần':'—'):'—')+'</td><td>'+byp+'</td><td>'+vlv+'</td></tr>';
+  }
+  $('stTable').innerHTML=t;
+  // lỗi & khoanh vùng
+  if(typeof updateExUI==='function') updateExUI();
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',!!F[c.dataset.f]&&!hide));
+  const act=FAULTS.filter(f=>F[f.id]);
+  $('faultMode').innerHTML=S.hidden&&!S.reveal?'<span class="warn">Đang bật lỗi ẩn – bấm Hiện tên lỗi ẩn khi muốn xem.</span>':(act.length?'<b>Đang mô phỏng '+act.length+' lỗi:</b> '+act.map(f=>f.n).join(', '):'Đang ở trạng thái <b>máy chuẩn (0 lỗi)</b>. Bấm vào lỗi bất kỳ bên dưới để mô phỏng đối chiếu.');
+  $('bReveal').style.display=S.hidden?'':'none';
+  $('bReveal').textContent=S.reveal?'Ẩn tên lỗi':'Hiện tên lỗi ẩn';
+  const fd=$('faultDetail');
+  if(act.length&&!hide){fd.style.display='';fd.innerHTML='<h3>📌 Thông tin chẩn đoán nhanh lỗi đang chọn</h3><div class="note" style="margin-bottom:6px">Các con số trong mô tả ứng với thông số mặc định (bơm 12 cc/v, xi lanh 80/40, núm 140 bar, tôn 0,45 G550). Khi đã nhập thông số máy thật, lấy số đo trên sim làm chuẩn so sánh.</div>'+act.map(f=>'<div style="margin-bottom:8px;padding:6px 8px;background:#FFFDF7;border-left:3px solid var(--red);font-size:12.5px;line-height:1.45"><b>'+f.z+' · '+f.n+'</b><br><span class="muted">• Triệu chứng thực tế:</span> '+f.s+'<br><span class="muted">• Điểm đo xác nhận nhanh:</span> <b>'+f.t+'</b><br><span class="muted">• Cách xử lý:</span> <span style="color:#166534;font-weight:600">'+f.f+'</span></div>').join('');}
+  else fd.style.display='none';
+}
+
+/* =========================================================
+   TRIỆU CHỨNG
+   ========================================================= */
+const hist={p0:[],relT:0,stv:[[],[],[]]};
+function huntSample(dtf){
+  if(S.qRel*LPM>1&&S.press&&S.km){hist.relT+=dtf; if(hist.relT>0.3){hist.p0.push(Pn[NP]); if(hist.p0.length>40) hist.p0.shift();}}
+  else {hist.relT=0; hist.p0=[];}
+}
+function huntAmp(){
+  const a=hist.p0; if(a.length<20) return 0;
+  let rev=0,dir=0; for(let k=1;k<a.length;k++){const d=a[k]-a[k-1]; if(Math.abs(d)<1e5) continue; const sg=Math.sign(d); if(dir!==0&&sg!==dir) rev++; dir=sg;}
+  return rev>=4?Math.max(...a)-Math.min(...a):0;
+}
+function symptoms(){
+  const F=S.faults, sy=[], R='#C8372D', O='#D9822B', G='#2E8B57', N='#A7B0BA';
+  const add=(t,c)=>sy.push([t,c]);
+  for(let i=0;i<3;i++){hist.stv[i].push(Math.abs(S.v[i])>2e-3?1:0); if(hist.stv[i].length>12) hist.stv[i].shift();}
+  if(S.olTrip) add('Motor tự dừng, rơ-le nhiệt đã nhảy (đèn OL).',R);
+  if(!S.km&&!S.olTrip) add('Motor đang dừng.',N);
+  if(S.estop) add('Đang nhấn dừng khẩn.',N);
+  if(S.km&&S.t-S.kmT>2&&S.n<0.7*K.nSync) add('KM đã đóng nhưng motor chỉ đạt '+f0(S.n)+' v/ph, dòng '+fx(S.I,1)+' A.',R);
+  if(S.t-S.kmT<6&&S.startCmd.some(c=>c!==0)) add('Motor được khởi động khi tay gạt '+S.startCmd.map((c,k)=>c!==0?'V'+(k+1)+' ở '+(c>0?'TIẾN':'LÙI'):'').filter(Boolean).join(', ')+' – xi lanh chạy ngay khi có áp.',R);
+  if(PAR.rearm==='yes'&&S.km&&!S.armed) add('PLC chưa cấp Y0: chờ mọi tay gạt về GIỮA (khóa khởi động lại).',O);
+  for(let i=0;i<3;i++) if(!S.km&&Math.abs(S.v[i])>2e-3) add(NAMES[i]+' vẫn '+(S.v[i]>0?'đi xuống':'đi lên')+' khi motor đã dừng'+(S.estop?' / đang dừng khẩn':'')+' (tay gạt V'+(i+1)+' '+(S.cmd[i]>0?'TIẾN':S.cmd[i]<0?'LÙI':'GIỮA')+').',R);
+  const anyCmd=S.cmd.some(c=>c!==0), anyMove=S.v.some(v=>Math.abs(v)>2e-3);
+  if(S.km&&S.n>0.8*K.nSync){
+    if(S.gVac>0.1e5) add('VAC chỉ áp DƯƠNG '+fx(S.gVac/1e5,2)+' bar.',R);
+    if(S.gVac<-0.25e5) add('Chân không hút '+fx(S.gVac/1e5,2)+' bar (giới hạn −0,25 bar).',R);
+    if(S.cav||S.air>0.03) add('Bơm rít/ồn, kim P0 rung.',R);
+    if(S.air>0.03) add('Mắt thăm dầu đục, có bọt khí.',R);
+    const idle=!anyCmd&&S.offT<=0&&!S.ovr;
+    if(idle&&S.gP0>12e5) add('Áp nghỉ (không gạt van) P0 = '+f0(S.gP0/BAR)+' bar, chuẩn 3–8 bar (~6,3 bar).',R);
+    if(idle&&S.gP0<=12e5) add('Không gạt van: PLC tắt Y0, DBW xả tải, P0 = '+f0(S.gP0/BAR)+' bar (bình thường).',G);
+    if(anyCmd&&!anyMove&&S.gP0<(S.relSet-15)*BAR) add('Đang gạt van, không xi lanh nào chạy, P0 chỉ '+f0(S.gP0/BAR)+' bar (núm '+S.relSet+' bar).',R);
+    if(anyCmd) add('PLC: X1 '+(S.X[0]?'sáng':'tắt')+' · X2 '+(S.X[1]?'sáng':'tắt')+' · X3 '+(S.X[2]?'sáng':'tắt')+' · Y0 '+(S.Y0?'sáng':'tắt')+' · LED giắc '+(S.plugV>0?'sáng':'tắt')+'.',S.press?G:R);
+    for(let k=0;k<3;k++) if(Math.abs(S.u[k])>0.5&&!S.X[k]) add('Đã gạt V'+(k+1)+' nhưng đèn X'+(k+1)+' không sáng.',R);
+    if(S.Y0&&S.plugV===0) add('Đèn Y0 sáng nhưng LED giắc coil tắt.',R);
+    const rng=huntAmp();
+    if(S.qRel*LPM>1&&S.press&&rng>8e5) add('Van an toàn đang xả, P0 dao động '+f0(rng/BAR)+' bar, van kêu rè.',R);
+    else if(S.qRel*LPM>1&&S.press){
+      if(Pn[NT]>5e5&&PAR.dbwDrain==='filter') add('Van an toàn đang xả '+fx(S.qRel*LPM,1)+' L/ph ở '+f0(Pn[NP]/BAR)+' bar (vượt áp núm '+S.relSet+' bar vì áp đường hồi MT ≈ '+f0(Pn[NT]/BAR)+' bar cộng trực tiếp vào cổng T của DBW + ~7 bar quá áp dòng chảy).',R);
+      else add('Van an toàn đang xả '+fx(S.qRel*LPM,1)+' L/ph ở '+f0(Pn[NP]/BAR)+' bar (áp núm '+S.relSet+' bar + ~7 bar quá áp dòng chảy khi xả toàn lưu lượng – bình thường khi chạm cuối hành trình, dao kẹt hoặc khóa VB).',O);
+    }
+  }
+  if(Pn[NR]>2e5) add('Chỉ báo lọc hồi ĐỎ (ΔPf '+fx(Pn[NR]/BAR,1)+' bar).',R);
+  if(S.Toil>60) add('Dầu nóng '+fx(S.Toil,0)+' °C (báo động > 60 °C).',R);
+  if(S.Vtank<K.Vmin) add('Mức dầu dưới vạch MIN ('+fx(S.Vtank*1000,1)+' L).',R);
+  for(let i=0;i<3;i++){
+    if(S.cmd[i]!==0&&!S.ball[i]) add('VB'+(i+1)+' đang KHÓA – '+NAMES[i]+' bị cô lập.',N);
+    if(i<2&&S.stall[i]) add('Dao '+ROLES[i].toLowerCase()+' ('+NAMES[i]+') dừng trong tôn tại x ≈ '+f0(S.x[i]*1000)+' mm, không cắt đứt.',R);
+    const v=S.v[i], va=S.vAvg[i], u=S.u[i];
+    if(Math.abs(u)<0.1&&Math.abs(va)>1.5e-4) add(NAMES[i]+' tự trôi '+(va>0?'xuống':'lên')+' khi van ở GIỮA (~'+fx(Math.abs(va)*1000*60,0)+' mm/phút ≈ '+fx(Math.abs(va)*1000,2)+' mm/s'+(S.ball[i]?'':', dù VB'+(i+1)+' đã KHÓA')+').',R);
+    const inCut=i<2&&S.x[i]>=K.xc&&S.x[i]<K.xc+K.h, inPress=i===2&&S.x[i]>K.xp-0.002;
+    if(Math.abs(u)>0.5&&Math.abs(v)>2e-3&&!inCut&&!inPress){
+      const vexp=(u>0?K.Qr/K.Ac:K.Qr/K.Ar); const moving=S.v.filter(x=>Math.abs(x)>2e-3).length;
+      if(moving===1&&Math.abs(v)<0.8*vexp) add(NAMES[i]+' chạy chậm '+fx(Math.abs(v)*1000,0)+' mm/s (lý thuyết ≈ '+fx(vexp*1000,0)+').',R);
+    }
+    const hv=hist.stv[i]; let tr=0; for(let k=1;k<hv.length;k++) if(hv[k]!==hv[k-1]) tr++;
+    if(Math.abs(u)>0.5&&tr>=4) add(NAMES[i]+' chạy giật cục (dừng – chạy liên tục).',R);
+    if(S.cmd[i]!==0&&S.u[i]*S.cmd[i]>0.5){
+      const others=[0,1,2].filter(k=>k!==i&&Math.abs(S.v[k])>2e-3).length;
+      if(Math.abs(v)<1e-4&&!(S.x[i]<=1e-4&&u<0)&&!(S.x[i]>=K.L-1e-4&&u>0)&&!S.stall[i]&&S.ball[i]&&others>0&&!(i===2&&S.x[i]>K.xp)) add(NAMES[i]+' đang chờ – dầu ưu tiên xi lanh tải nhẹ hơn (đặc tính mạch song song).',O);
+    }
+  }
+  if(S.lastPk[0]>0&&S.lastPk[1]>0&&S.lastPk[0]>1.25*S.lastPk[1]) add('Áp đỉnh khi cắt XL1 '+f0(S.lastPk[0]/BAR)+' bar, cao hơn XL2 ('+f0(S.lastPk[1]/BAR)+' bar).',R);
+  if(S.t-S.detFlag<3) add('Tay gạt V3 tự nhảy về GIỮA sau khi buông.',R);
+  if(F.hose3) add('Dầu nhỏ giọt ở ống phía ty XL3.',R);
+  if(F.rod2) add('Ty XL2 ướt dầu.',R);
+  if(F.g2stuck&&Math.abs(S.u[1])>0.5&&S.km) add('G2 chỉ 0 bar trong khi trạm 2 đang được gạt.',R);
+  if(S.relSet>160) add('Núm DBW đặt '+S.relSet+' bar > 160: quá áp cho xi lanh, ống và bơm bánh răng.',R);
+  if(S.km&&sy.filter(x=>x[1]===R).length===0&&!sy.some(x=>x[1]===G)) add('Chưa thấy bất thường.',G);
+  $('sym').innerHTML=sy.map(x=>'<div class="sym"><span class="dot" style="background:'+x[1]+'"></span><span>'+x[0]+'</span></div>').join('');
+}
+
+/* =========================================================
+   ĐỒ THỊ
+   ========================================================= */
+const CHS=[['P0 (đồng hồ)','#C8372D'],['MG block P','#D9822B'],['MT đường hồi','#2C68B0'],['A trạm','#2E8B57'],['B trạm','#7B4FB0'],['x trạm (mm, trục phải)','#17202B']];
+$('chartLegend').innerHTML=CHS.map(c=>'<span><i style="background:'+c[1]+'"></i>'+c[0]+'</span>').join('');
+function chartPush(){
+  if(CH.paused) return;
+  if(CH.lastT>=0&&S.t-CH.lastT<0.014) return;
+  CH.lastT=S.t;
+  const k=+$('selChartSt').value;
+  const v=[S.gP0/BAR,Pn[NG]/BAR,Pn[NT]/BAR,Pn[iAV(k)]/BAR,Pn[iBV(k)]/BAR,S.x[k]*1000];
+  CH.t.push(S.t); v.forEach((x,j)=>CH.s[j].push(x));
+  while(CH.t.length>2&&CH.t[0]<S.t-10.2){CH.t.shift();CH.s.forEach(a=>a.shift());}
+}
+function chartDraw(){
+  const cv=$('chart'), dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
+  if(w<10||h<10) return;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
+  const c=cv.getContext('2d'); if(!c) return; c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,h);
+  const L=40,Rm=40,T=8,B=20, W=w-L-Rm, H=h-T-B;
+  let maxP=40; CH.s.slice(0,5).forEach(a=>a.forEach(x=>{if(x>maxP)maxP=x;}));
+  if(CH.ref) CH.ref.s.slice(0,5).forEach(a=>a.forEach(x=>{if(x>maxP)maxP=x;}));
+  let pmax=Math.max(50,Math.ceil((maxP*1.12)/25)*25);
+  c.font='10px Consolas,monospace'; c.fillStyle='#4A5561'; c.strokeStyle='#E6E9EC'; c.lineWidth=1;
+  for(let k=0;k<=5;k++){const y=T+H-H*k/5;c.beginPath();c.moveTo(L,y);c.lineTo(L+W,y);c.stroke();c.fillText(Math.round(pmax*k/5),4,y+3);c.fillText(Math.round(PAR.stroke*k/5),L+W+4,y+3);}
+  c.fillText('bar',4,T+H+16); c.fillText('mm',L+W+4,T+H+16);
+  if(CH.ref&&CH.ref.dt.length>=2){
+    c.save(); c.globalAlpha=0.35; c.setLineDash([5,4]);
+    CHS.forEach((cs,j)=>{const a=CH.ref.s[j]; c.strokeStyle=cs[1]; c.lineWidth=1.5; c.beginPath();
+      for(let k=0;k<a.length;k++){const x=L+W*(CH.ref.dt[k]/10); const y=j===5?T+H-H*a[k]/PAR.stroke:T+H-H*clamp(a[k],0,pmax)/pmax; if(k===0)c.moveTo(x,y);else c.lineTo(x,y);} c.stroke();});
+    c.restore();
+  }
+  if(CH.t.length<2) return; const t1=CH.t[CH.t.length-1], t0=t1-10;
+  c.fillText(fx(t0,0)+' s',L,T+H+14); c.fillText(fx(t1,1)+' s',L+W-40,T+H+14);
+  CHS.forEach((cs,j)=>{const a=CH.s[j];c.strokeStyle=cs[1];c.lineWidth=j===5?1.2:1.6;c.setLineDash(j===5?[4,3]:[]);c.beginPath();
+    for(let k=0;k<a.length;k++){const x=L+W*(CH.t[k]-t0)/10; const y=j===5?T+H-H*a[k]/PAR.stroke:T+H-H*clamp(a[k],0,pmax)/pmax; if(k===0)c.moveTo(x,y);else c.lineTo(x,y);} c.stroke();});
+  c.setLineDash([]);
+  const k=+$('selChartSt').value; let row=0;
+  c.font='10.5px Segoe UI,Arial,sans-serif';
+  S.ev.forEach(e=>{if(e.i!==k||e.t<t0) return; const x=L+W*(e.t-t0)/10; c.strokeStyle='#5B6672'; c.setLineDash([3,3]); c.beginPath(); c.moveTo(x,T); c.lineTo(x,T+H); c.stroke(); c.setLineDash([]); const tw=c.measureText(e.l).width+6, y=T+2+(row%3)*14; row++; c.fillStyle='rgba(255,255,255,0.9)'; c.fillRect(x+2,y,tw,13); c.fillStyle='#17202B'; c.fillText(e.l,x+5,y+10);});
+}
+
+/* =========================================================
+   CHU KỲ TỰ ĐỘNG (NHẤN XL3 -> CẮT XL1/XL2 -> LÙI VỀ)
+   ========================================================= */
+let AUTO={active:false,cutter:0,phase:0,tPhase:0,t0:0};
+function startAutoCycle(cutter){
+  if(!S.km&&!S.estop&&!S.olTrip){S.km=true;S.kmT=S.t;S.startCmd=[0,0,0];}
+  S.ball=[true,true,true]; framePre();
+  $('selChartSt').value=String(cutter);
+  CH.t=[];CH.s=CH.s.map(()=>[]);CH.lastT=-1;
+  AUTO={active:true,cutter,phase:1,tPhase:S.t,t0:S.t};
+  S.cmd=[0,0,0]; S.cmd[2]=1; S.cmdT[2]=S.t;
+  syncAutoUI();
+}
+function stopAutoCycle(msg){
+  AUTO.active=false; AUTO.phase=0;
+  S.cmd=[0,0,0];
+  syncAutoUI(msg);
+}
+function stepAuto(){
+  if(!AUTO.active) return;
+  if(!S.km||S.estop||S.olTrip){stopAutoCycle('Đã dừng chu kỳ (motor dừng)');return;}
+  const c=AUTO.cutter, dtP=S.t-AUTO.tPhase;
+  const tE=K.L/(K.Qr/K.Ac), tR=K.L/(K.Qr/K.Ar), lim=t=>2.5*t+2;
+  if(AUTO.phase===1){
+    S.cmd[2]=1; S.cmd[c]=0;
+    if(S.x[2]>=K.xp-0.002&&dtP>0.6){AUTO.phase=2;AUTO.tPhase=S.t;AUTO.cut0=S.cuts[c];S.cmd[c]=1;S.cmdT[c]=S.t;syncAutoUI();}
+    else if(dtP>lim(tE)){stopAutoCycle('⚠ Dừng chu kỳ: đầu nhấn XL3 không chạm tôn sau '+fx(dtP,1)+' s');}
+  } else if(AUTO.phase===2){
+    S.cmd[2]=1; S.cmd[c]=1;
+    if(S.x[c]>=K.L-0.002){AUTO.phase=3;AUTO.tPhase=S.t;S.cmd[c]=-1;S.cmdT[c]=S.t;syncAutoUI();}
+    else if(dtP>lim(tE)){const ok=S.cuts[c]>AUTO.cut0; S.cmd[c]=0; stopAutoCycle(ok?'⚠ Dừng chu kỳ: dao đã cắt đứt nhưng không về cuối hành trình sau '+fx(dtP,1)+' s':'⚠ Dừng chu kỳ: dao '+NAMES[c]+' KHÔNG cắt đứt tôn sau '+fx(dtP,1)+' s (x = '+f0(S.x[c]*1000)+' mm)');}
+  } else if(AUTO.phase===3){
+    S.cmd[2]=1; S.cmd[c]=-1;
+    if(S.x[c]<=0.002){AUTO.phase=4;AUTO.tPhase=S.t;S.cmd[c]=0;S.cmd[2]=-1;S.cmdT[2]=S.t;syncAutoUI();}
+    else if(dtP>lim(tR)){S.cmd[c]=0; stopAutoCycle('⚠ Dừng chu kỳ: dao '+NAMES[c]+' không lùi về đầu sau '+fx(dtP,1)+' s');}
+  } else if(AUTO.phase===4){
+    S.cmd[c]=0; S.cmd[2]=-1;
+    if(S.x[2]<=0.002){stopAutoCycle('✔ Hoàn thành chu kỳ ('+fx(S.t-AUTO.t0,1)+' s, cắt đứt '+(S.cuts[c]-AUTO.cut0)+' lần)');}
+    else if(dtP>lim(tR)){S.cmd[2]=0; stopAutoCycle('⚠ Dừng chu kỳ: đầu nhấn XL3 không lùi về đầu sau '+fx(dtP,1)+' s');}
+  }
+}
+function syncAutoUI(doneMsg){
+  const bStop=$('bAutoStop'), txt=$('autoTxt');
+  if(!bStop||!txt) return;
+  if(AUTO.active){
+    bStop.style.display='';
+    const pNames=['','B1/4: XL3 hạ nhấn giữ tôn...','B2/4: '+NAMES[AUTO.cutter]+' hạ cắt tôn...','B3/4: '+NAMES[AUTO.cutter]+' rút lên...','B4/4: XL3 rút lên về đầu...'];
+    txt.textContent=pNames[AUTO.phase]||'';
+  } else {
+    bStop.style.display='none';
+    txt.textContent=doneMsg||'';
+  }
+}
+
+/* =========================================================
+   DỰNG NHANH TƯ THẾ THẤY RÕ LỖI & PHÁC ĐỒ KHOANH VÙNG NHANH
+   ========================================================= */
+function selectTp(code){
+  if(!TPMAP.hasOwnProperty(code)) return;
+  S.tp=code; S.tpVal=Pn[TPMAP[code]]; S.tpPeak=S.tpVal; S.tpMin=S.tpVal;
+  if($('selTp')) $('selTp').value=code;
+}
+function setupFaultPosture(fid){
+  stopAutoCycle();
+  S.estop=false; S.olTrip=false; S.olTh=0; S.ovrLock=false;
+  S.ball=[true,true,true]; S.cmd=[0,0,0]; S.u=[0,0,0];
+  if($('cPinLock')) $('cPinLock').checked=false;
+  if(!fid){S.km=true;S.kmT=S.t;framePre();return;}
+  S.km=true; S.kmT=S.t;
+  if(fid==='p0off'||fid==='dbwVent'){selectTp('MT');}
+  else if(fid==='retRestr'){selectTp('MT'); S.x[0]=0.22; S.cmd[0]=-1; S.cmdT[0]=S.t;}
+  else if(fid==='seal1'){S.x[0]=0.10; S.cmd[0]=0; selectTp('MB1');}
+  else if(fid==='spool2'){S.x[1]=0.10; S.cmd[1]=0; selectTp('MB2');}
+  else if(fid==='score2'){S.x[1]=0.12; const ph=S.mass[1]*GRAV/K.Ar; Pn[iBC(1)]=ph; Pn[iBV(1)]=ph; S.cmd[1]=0; selectTp('MB2');}
+  else if(fid==='sw1'||fid==='wire'||fid==='coil'||fid==='dbwPilot'||fid==='rev'){S.cmd[0]=1; S.cmdT[0]=S.t; selectTp('MP');}
+  else if(fid==='dbwWeak'||fid==='blunt1'||fid==='pump'||fid==='suct'||fid==='bent1'){S.x[0]=0; S.cmd[0]=1; S.cmdT[0]=S.t; $('selChartSt').value='0'; selectTp('MA1');}
+  else if(fid==='guide2'||fid==='g2stuck'||fid==='rod2'){S.x[1]=0; S.cmd[1]=1; S.cmdT[1]=S.t; $('selChartSt').value='1'; selectTp('MA2');}
+  else if(fid==='detent3'||fid==='air3'||fid==='hose3'){S.x[2]=0; S.cmd[2]=1; S.cmdT[2]=S.t; $('selChartSt').value='2'; selectTp('MA3');}
+  else if(fid==='retf'){S.cmd[0]=1; S.cmdT[0]=S.t; selectTp('MR');}
+  else if(fid==='olLow'){S.x[0]=K.L; S.cmd[0]=1; S.cmdT[0]=S.t; selectTp('MP');}
+  framePre();
+}
+
+const EXERCISES={
+  exIdle:{
+    title:'1 · Chẩn đoán nhanh: Áp nghỉ cao (~45–46 bar khi không gạt van)',
+    desc:'<b>Hiện tượng ngoài máy:</b> Motor chạy không tải (3 tay gạt ở GIỮA) nhưng đồng hồ P0 chỉ ~45–46 bar (chuẩn ~6,3 bar). Thực hiện 3 bước đo loại trừ nhanh bên dưới:',
+    pool:()=>PAR.dbwDrain==='filter'?['p0off','retRestr','dbwVent']:['p0off','dbwVent'],
+    checks:[
+      {txt:'<b>Bước 1 — Tắt motor (hoặc cắm đồng hồ cầm tay vào MP):</b><br>• <i>Nếu tắt motor mà kim P0 vẫn đứng ở ~40 bar (hoặc MP chỉ ~6,3 bar khi chạy)</i> → <b>Kết luận: Đồng hồ P0 lệch kim (+40 bar)</b> → Thay đồng hồ P0.', actLbl:'⚡ Tắt motor & đo MP', act:()=>{S.km=false;selectTp('MP');}, auto:()=>!S.km||S.tp==='MP'},
+      {txt:'<b>Bước 2 — Chạy motor không tải, đo áp đường hồi tại MT (cổng T DBW):</b><br>• <i>Nếu MT cao bất thường (~39,5 bar) và khi gạt lùi P0 vọt lên ~181 bar</i> → <b>Kết luận: Nghẹt đường hồi (van bi hồi khép / ống gập)</b> → Mở hết van bi hồi, kiểm tra ống hồi.', actLbl:'⚡ Chạy máy & đo MT', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,0,0];selectTp('MT');}, auto:()=>S.km&&S.tp==='MT'},
+      {txt:'<b>Bước 3 — So sánh P0/MP với MT lúc chạy nghỉ:</b><br>• <i>Nếu P0 ≈ 45,6 bar, MP ≈ 45,6 bar nhưng MT thấp (~0,5 bar)</i> → <b>Kết luận: Van DBW xả tải không hết (kẹt tiết lưu / pilot)</b> → Tháo vệ sinh con trượt pilot & lỗ tiết lưu DBW.', actLbl:'⚡ Chạy máy & đo MR', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,0,0];selectTp('MR');}, auto:()=>S.km&&(S.tp==='MR'||S.tp==='MT')}
+    ]
+  },
+  exDrift:{
+    title:'2 · Chẩn đoán nhanh: Dao tự trôi xuống khi tay gạt ở GIỮA',
+    desc:'<b>Hiện tượng ngoài máy:</b> Tay gạt ở GIỮA nhưng cụm dao tự trôi xuống (~26–30 mm/phút ≈ 0,44 mm/s). Dùng van bi cô lập VB để tách ngay lỗi Van và lỗi Xi lanh:',
+    pool:()=>['seal1','spool2','score2'],
+    checks:[
+      {txt:'<b>Bước 1 — Khóa van bi cô lập (VB1 hoặc VB2) khi dao đang ở khoảng giữa (~120 mm):</b><br>• <i>Nếu khóa VB mà <b>hết trôi ngay</b></i> → <b>Kết luận: Van phân phối (V2) mòn con trượt</b> → Thay van.<br>• <i>Nếu khóa VB mà <b>vẫn trôi</b></i> → <b>Lỗi nằm trong xi lanh</b> (sang Bước 2).', actLbl:'⚡ Đưa về 120mm & Khóa VB1/VB2', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,0,0];S.x[0]=0.12;S.x[1]=0.12;const ph=S.mass[1]*GRAV/K.Ar;Pn[iBC(0)]=ph;Pn[iBC(1)]=ph;S.ball[0]=false;S.ball[1]=false;framePre();}, auto:()=>!S.ball[0]||!S.ball[1]},
+      {txt:'<b>Bước 2 — Mở VB, gạt giữ kịch cuối hành trình (250 mm) đo Rò piston (Bypass):</b><br>• <i>Nếu Rò piston cuối HT lớn (~4,1–5,0 L/ph, chuẩn &lt; 0,2) và trôi mọi vị trí</i> → <b>Kết luận: Hỏng phớt piston (XL1)</b>.<br>• <i>Nếu chỉ trôi đoạn giữa 100–180 mm còn cuối HT vẫn kín (&lt; 0,2 L/ph)</i> → <b>Kết luận: Xước nòng giữa hành trình (XL2)</b>.', actLbl:'⚡ Ép cuối HT đo Bypass XL1', act:()=>{S.km=true;S.kmT=S.t;S.ball=[true,true,true];S.x[0]=K.L;S.cmd=[1,0,0];S.u=[1,0,0];framePre();advance(0.15);}, auto:()=>(S.x[0]>0.24||S.x[1]>0.24)},
+      {txt:'<b>Bước 3 — Đo Rò trong van (Tay gạt GIỮA + Khóa VB + Khóa chốt coil YV0):</b><br>• <i>Nếu Rò trong van V2 ≈ 4,1 L/ph (chuẩn &lt; 0,1 L/ph)</i> → Xác nhận 100% <b>Van V2 mòn con trượt</b>.', actLbl:'⚡ Đo Rò trong Van V1–V3', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,0,0];S.u=[0,0,0];S.ball=[false,false,false];S.ovrLock=true;$('cPinLock').checked=true;framePre();advance(0.15);}, auto:()=>S.ovrLock&&!S.ball[1]}
+    ]
+  },
+  exNoP:{
+    title:'3 · Chẩn đoán nhanh: Gạt van nhưng không lên áp (~4–6 bar)',
+    desc:'<b>Hiện tượng ngoài máy:</b> Gạt tay gạt nhưng P0 chỉ ~4–6,3 bar (không cắt được tôn). Nhìn đèn PLC, LED giắc và ấn chốt tay coil để khoanh vùng trong 30 giây:',
+    pool:()=>['sw1','wire','coil','dbwPilot','rev'],
+    checks:[
+      {txt:'<b>Bước 1 — Nhìn đồng hồ VAC và thử gạt V2 so với V1 (nhìn đèn X1, X2, Y0):</b><br>• <i>Nếu VAC chỉ áp dương (+0,29 bar), bơm kêu lạ</i> → <b>Kết luận: Motor đấu ngược chiều</b> → Đảo 2 pha.<br>• <i>Nếu gạt V1 đèn X1 tắt (mất áp), nhưng gạt V2 đèn X2 &amp; Y0 sáng (lên áp đủ)</i> → <b>Kết luận: Hỏng công tắc tay gạt V1</b>.', actLbl:'⚡ Gạt thử V2 so với V1', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,1,0];S.cmdT[1]=S.t;}, auto:()=>S.cmd[1]!==0||S.cmd[2]!==0},
+      {txt:'<b>Bước 2 — Gạt V1, ấn giữ/khóa Chốt tay cơ khí trên coil YV0:</b><br>• <i>Nếu ấn chốt tay mà <b>vẫn không lên áp (~4–6,3 bar)</b></i> → <b>Kết luận: Kẹt cơ khí con trượt pilot DBW ở vị trí xả</b> → Tháo vệ sinh pilot DBW.<br>• <i>Nếu ấn chốt tay mà <b>lên đủ ~147 bar</b></i> → Thủy lực tốt, lỗi ở Điện/Coil (sang Bước 3).', actLbl:'⚡ Khóa chốt tay coil YV0', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[1,0,0];S.ovrLock=true;$('cPinLock').checked=true;}, auto:()=>S.ovr},
+      {txt:'<b>Bước 3 — Nhìn LED giắc YV0 và đo V DC / Ω coil YV0 (khi Y0 đã sáng):</b><br>• <i>Nếu Y0 sáng nhưng <b>LED giắc tắt (0 V DC)</b></i> → <b>Kết luận: Đứt dây / hỏng tiếp điểm KA / cháy cầu chì</b>.<br>• <i>Nếu <b>LED giắc sáng (24 V DC)</b> nhưng đo điện trở coil = <b>OL (hở mạch)</b></i> → <b>Kết luận: Cháy cuộn dây coil YV0</b>.', actLbl:'⚡ Đo Ω coil YV0', act:()=>{S.ovrLock=false;$('cPinLock').checked=false;$('selMm').value='coil';}, auto:()=>$('selMm').value==='plug'||$('selMm').value==='coil'}
+    ]
+  },
+  exCut:{
+    title:'4 · Chẩn đoán nhanh: Dao kẹt trong tôn / không đứt / cắt chậm',
+    desc:'<b>Hiện tượng ngoài máy:</b> Dao dừng kẹt giữa chừng ở tôn hoặc tốc độ cắt có tải rất chậm. So sánh P0, VAC và áp đỉnh XL1/XL2:',
+    pool:()=>['dbwWeak','blunt1','pump','suct'],
+    checks:[
+      {txt:'<b>Bước 1 — Nhìn áp P0 khi dao đang kẹt (hoặc khóa VB + gạt van thử áp chặn):</b><br>• <i>Nếu P0 chỉ đạt tối đa <b>~62,5 bar</b> (vặn núm không lên) và dao kẹt ở <b>~142 mm</b></i> → <b>Kết luận: Lò xo DBW yếu / bệ van mòn</b> → Thay lò xo/bệ DBW.', actLbl:'⚡ Gạt cắt XL1 xem áp chặn', act:()=>{S.km=true;S.kmT=S.t;S.x[0]=0;S.cmd=[1,0,0];S.cmdT[0]=S.t;selectTp('MA1');}, auto:()=>S.cmd[0]>0},
+      {txt:'<b>Bước 2 — Đọc đồng hồ chân không VAC và lưu lượng bơm khi có tải:</b><br>• <i>Nếu VAC tụt sâu <b>≈ −0,54 bar</b> (&lt; −0,25 bar), bơm rít, mọi xi lanh chậm</i> → <b>Kết luận: Tắc lọc hút 125 µm</b>.<br>• <i>Nếu VAC chuẩn (−0,14 bar), vẫn lên áp chặn ~146 bar nhưng chạy tải chậm (Q ở 120 bar chỉ đạt ~69%)</i> → <b>Kết luận: Bơm mòn rò trong lớn</b>.', actLbl:'⚡ Xem lưu lượng & VAC', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[1,0,0];selectTp('MP');}, auto:()=>S.tp==='MP'},
+      {txt:'<b>Bước 3 — Chạy cắt thử XL1 và XL2 để so sánh Áp đỉnh cắt:</b><br>• <i>Nếu cả 2 dao đều cắt đứt nhưng áp đỉnh <b>XL1 (~111 bar)</b> cao hơn hẳn <b>XL2 (~76 bar)</b>, tôn có bavia</i> → <b>Kết luận: Dao cắt đầu XL1 bị cùn / sai khe hở dao</b> → Mài dao, chỉnh khe hở.', actLbl:'⚡ Gạt cắt thử XL2 để so sánh', act:()=>{S.km=true;S.kmT=S.t;S.x[1]=0;S.cmd=[0,1,0];S.cmdT[1]=S.t;selectTp('MA2');}, auto:()=>S.cuts[1]>0||S.cmd[1]>0}
+    ]
+  },
+  exHot:{
+    title:'5 · Chẩn đoán nhanh: Dầu nóng nhanh (> 60 °C) / Nhảy rơ-le nhiệt OL',
+    desc:'<b>Hiện tượng ngoài máy:</b> Dầu tăng nhiệt rất nhanh hoặc motor tự ngắt do nhảy rơ-le nhiệt (OL). Kiểm tra dòng motor, tổn thất áp lúc nghỉ và lọc hồi:',
+    pool:()=>['olLow','dbwVent','retRestr','retf','pump'],
+    checks:[
+      {txt:'<b>Bước 1 — Kẹp dòng Ampe motor (I) so với dòng định mức (In) và nấc chỉnh OL:</b><br>• <i>Nếu dòng motor bình thường (nghỉ ≈ 0,45 × In, khoảng 5 A với motor 11,4 A; cắt &lt; In) nhưng OL nhảy sớm</i> → <b>Kết luận: Rơ-le nhiệt chỉnh quá thấp</b> → Chỉnh lại OL = 1,0–1,05 × In.', actLbl:'⚡ Kẹp dòng Ampe motor', act:()=>{S.km=true;S.kmT=S.t;$('selMm').value='amp';}, auto:()=>$('selMm').value==='amp'},
+      {txt:'<b>Bước 2 — Kiểm tra áp P0 và MT lúc máy chạy nghỉ (không gạt van):</b><br>• <i>Nếu lúc nghỉ P0 ≈ 45–46 bar (thay vì ~6,3 bar)</i>: sinh nhiệt ~1,4 kW liên tục! Đo tiếp MT: <b>MT ≈ 0,5 bar → DBW xả không hết</b>; <b>MT ≈ 39,5 bar → Nghẹt đường hồi</b>.', actLbl:'⚡ Chạy nghỉ & đo MT', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,0,0];selectTp('MT');}, auto:()=>S.tp==='MT'},
+      {txt:'<b>Bước 3 — Kiểm tra chỉ báo lọc hồi (đo MR trước lọc hồi):</b><br>• <i>Nếu chỉ báo lọc hồi báo <b>ĐỎ (ΔPf ≈ 4,2 bar &gt; 2 bar)</b></i> → <b>Kết luận: Tắc lõi lọc hồi 10 µm</b> → Thay lõi lọc.<br>• <i>Nếu áp nghỉ chuẩn, lọc xanh nhưng dầu nóng nhanh khi cắt &amp; xi lanh chậm</i> → <b>Kết luận: Bơm mòn rò nội bộ</b>.', actLbl:'⚡ Đo MR trước lọc hồi', act:()=>{S.km=true;S.kmT=S.t;selectTp('MR');}, auto:()=>S.tp==='MR'}
+    ]
+  },
+  exMove:{
+    title:'6 · Chẩn đoán nhanh: Chạy giật cục / nặng về cuối / nhún / tự nhả gạt',
+    desc:'<b>Hiện tượng ngoài máy:</b> Xi lanh chuyển động bất thường (tự bật tay gạt về GIỮA, nhún trễ khi chạm tôn, chạy giật hoặc nặng dần về cuối hành trình):',
+    pool:()=>['detent3','air3','bent1','guide2','lowoil'],
+    checks:[
+      {txt:'<b>Bước 1 — Quan sát tay gạt V3 khi buông tay và nhìn mắt thăm dầu:</b><br>• <i>Nếu gạt V3 sau ~0,4 s tay gạt tự nhảy về GIỮA (X3 tắt)</i> → <b>Kết luận: Hỏng bi/lò xo khấc giữ van V3</b>.<br>• <i>Nếu mức dầu dưới MIN (~50%), mắt thăm có bọt khí, bơm ồn</i> → <b>Kết luận: Thiếu dầu thủy lực</b>.', actLbl:'⚡ Gạt thử V3 (XL3 nhấn)', act:()=>{S.km=true;S.kmT=S.t;S.cmd=[0,0,1];S.cmdT[2]=S.t;}, auto:()=>S.cmd[2]!==0||S.t-S.detFlag<5},
+      {txt:'<b>Bước 2 — Gạt V3 nhấn xuống tôn (175 mm), so sánh tốc độ lên áp của G3 và P0:</b><br>• <i>Nếu đầu nhấn khởi động trễ, nhún khi chạm tôn và G3 lên áp chậm hơn hẳn P0</i> → <b>Kết luận: XL3 bị lọt khí (chưa xả gió)</b> → Xả gió đầu nối cao nhất.', actLbl:'⚡ Xem đồ thị Trạm 3 khi nhấn', act:()=>{S.km=true;S.kmT=S.t;S.x[2]=0;S.cmd=[0,0,1];S.cmdT[2]=S.t;$('selChartSt').value='2';selectTp('MA3');}, auto:()=>$('selChartSt').value==='2'},
+      {txt:'<b>Bước 3 — So sánh áp chạy không tải của XL1 và XL2 suốt hành trình:</b><br>• <i>Nếu XL1 càng về cuối hành trình áp càng tăng dần và chậm lại</i> → <b>Kết luận: Ty XL1 bị cong / lệch tâm</b>.<br>• <i>Nếu XL2 chạy giật cục (dừng–chạy liên tục) suốt hành trình</i> → <b>Kết luận: Dẫn hướng dao XL2 khô / kẹt cơ khí</b>.', actLbl:'⚡ Gạt tiến XL1 & XL2 so sánh', act:()=>{S.km=true;S.kmT=S.t;S.x[0]=0;S.x[1]=0;S.cmd=[1,1,0];S.cmdT[0]=S.t;S.cmdT[1]=S.t;}, auto:()=>S.cmd[0]>0||S.cmd[1]>0}
+    ]
+  }
+};
+let EX={id:null,fault:null,ticks:[false,false,false],autoDone:[false,false,false]};
+function startExercise(id,specificFid){
+  const cfg=EXERCISES[id]; if(!cfg) return;
+  const pool=cfg.pool();
+  const fid=specificFid!==undefined?specificFid:pool[0];
+  initState(false);
+  S.faults=fid?{[fid]:true}:{}; S.hidden=false; S.reveal=true;
+  setupFaultPosture(fid);
+  syncUI();
+  EX={id,fault:fid,ticks:cfg.checks.map(()=>false),autoDone:cfg.checks.map(()=>false)};
+  renderExBanner();
+}
+function stopExercise(){
+  EX={id:null,fault:null,ticks:[],autoDone:[]};
+  $('exBanner').classList.remove('on');
+  document.querySelectorAll('.ex-btn').forEach(b=>b.classList.remove('on'));
+}
+function renderExBanner(){
+  const b=$('exBanner');
+  document.querySelectorAll('.ex-btn').forEach(btn=>btn.classList.toggle('on',btn.dataset.ex===EX.id));
+  if(!EX.id){b.classList.remove('on');return;}
+  const cfg=EXERCISES[EX.id];
+  b.classList.add('on');
+  $('exTitle').textContent=cfg.title;
+  $('exDesc').innerHTML=cfg.desc;
+  const pool=cfg.pool();
+  $('exSimBar').innerHTML='<div style="margin-bottom:4px"><b>🔬 Bấm mô phỏng thử từng nguyên nhân trên sim để đối chiếu với máy thật:</b></div><div class="row">'+
+    '<button class="b sm'+(EX.fault===''?' on':'')+'" data-ex-sim="">Máy chuẩn (0 lỗi)</button>'+
+    pool.map(fid=>'<button class="b sm'+(EX.fault===fid?' on':'')+'" data-ex-sim="'+fid+'">'+FBY[fid].n+'</button>').join('')+'</div>';
+  $('exChecks').innerHTML=cfg.checks.map((c,i)=>'<div class="chk-item'+(EX.ticks[i]?' done':'')+'" data-chk="'+i+'"><input type="checkbox" data-chki="'+i+'"'+(EX.ticks[i]?' checked':'')+' title="Đánh dấu đã kiểm tra bước này trên máy thật"><div style="flex:1">'+c.txt+'<div class="row" style="margin-top:4px"><button class="b sm" data-ex-act="'+i+'">'+c.actLbl+'</button><span class="chk-auto'+(EX.autoDone[i]?' ok':'')+'" id="exAuto'+i+'">'+(EX.autoDone[i]?'Đã thử trên sim ✓':'Chưa bấm thử')+'</span></div></div></div>').join('');
+}
+function updateExUI(){
+  if(!EX.id) return;
+  const cfg=EXERCISES[EX.id];
+  cfg.checks.forEach((c,i)=>{
+    if(!EX.autoDone[i]&&c.auto()){
+      EX.autoDone[i]=true;
+      const el=$('exAuto'+i);
+      if(el){el.textContent='Đã thử trên sim ✓';el.classList.add('ok');}
+    }
+  });
+}
+$('exSimBar').addEventListener('click',e=>{
+  const btn=e.target.closest('[data-ex-sim]'); if(!btn||!EX.id) return;
+  startExercise(EX.id,btn.dataset.exSim);
+});
+$('exChecks').addEventListener('click',e=>{
+  const actBtn=e.target.closest('[data-ex-act]');
+  if(actBtn&&EX.id){
+    const i=+actBtn.dataset.exAct;
+    const cfg=EXERCISES[EX.id];
+    if(cfg&&cfg.checks[i]&&cfg.checks[i].act){
+      cfg.checks[i].act();
+      EX.autoDone[i]=true;
+      const el=$('exAuto'+i); if(el){el.textContent='Đã thử trên sim ✓';el.classList.add('ok');}
+      updatePanels();
+    }
+    return;
+  }
+});
+$('exChecks').addEventListener('change',e=>{
+  const inp=e.target.closest('[data-chki]'); if(!inp||!EX.id) return;
+  const i=+inp.dataset.chki; EX.ticks[i]=inp.checked;
+  const lbl=inp.closest('.chk-item'); if(lbl) lbl.classList.toggle('done',inp.checked);
+});
+$('bExClose').onclick=()=>stopExercise();
+document.querySelectorAll('.ex-btn').forEach(btn=>btn.addEventListener('click',()=>startExercise(btn.dataset.ex)));
+
+function calcCal(){
+  const bore=+$('cal_bore').value||80, rod=+$('cal_rod').value||40, stroke=+$('cal_stroke').value||250;
+  const tExt=Math.max(0.5,+$('cal_tExt').value||3.2), pHold=+$('cal_pHold').value||4.7, pCut=+$('cal_pCut').value||76, pIdle=+$('cal_pIdle').value||6.3;
+  const Ac=Math.PI/4*Math.pow(bore/1000,2), Ar=Math.max(1e-5,Ac-Math.PI/4*Math.pow(rod/1000,2));
+  const Q_m3s=Ar*(stroke/1000)/tExt;
+  const Q_lpm=Q_m3s*LPM;
+  const pumpCC=Math.round((Q_m3s*60/(PAR.motorRPM||1450))*1e6*2)/2;
+  const massCut=Math.round((pHold*BAR*Ar)/GRAV/5)*5;
+  const Fh=pCut*BAR*Ac-1e5*Ar; const Fcut_N=Math.max(5000,Fh+massCut*GRAV-(300+0.015*Fh));
+  const cutRef=Math.round(Fcut_N/1000);
+  const ventP=Math.max(1,Math.round((pIdle-2.8)*2)/2);
+  const el=$('calPreview');
+  if(el) el.innerHTML='<b>Kết quả quy đổi sang thông số sim:</b> Lưu lượng thực ≈ <b>'+fx(Q_lpm,1)+' L/ph</b> → Lưu lượng riêng bơm <code>pumpCC</code> ≈ <b>'+fx(pumpCC,1)+' cc/v</b> · Khối lượng cụm dao <code>massCut</code> ≈ <b>'+massCut+' kg</b> · Lực cắt quy chiếu <code>cutRef</code> ≈ <b>'+cutRef+' kN</b> · Áp lò xo xả tải <code>ventP</code> ≈ <b>'+fx(ventP,1)+' bar</b>.';
+  return {bore,rod,stroke,pumpCC:clamp(pumpCC,2,63),massCut:clamp(massCut,20,800),cutRef:clamp(cutRef,5,150),ventP:clamp(ventP,1,10)};
+}
+['cal_bore','cal_rod','cal_stroke','cal_tExt','cal_pHold','cal_pCut','cal_pIdle'].forEach(id=>{const e=$(id);if(e)e.addEventListener('input',calcCal);});
+calcCal();
+$('bCalApply').onclick=()=>{
+  const c=calcCal();
+  Object.assign(PAR,c);
+  ['bore','rod','stroke','pumpCC','massCut','cutRef','ventP'].forEach(k=>{VER[k]=true;});
+  try{localStorage.setItem('dmc_hyd_par',JSON.stringify(PAR));localStorage.setItem('dmc_hyd_ver',JSON.stringify(VER));}catch(e){}
+  buildParForm(); derive(); buildDerived(); initState(true); framePre(); syncUI();
+};
+$('bMarkVer').onclick=()=>{
+  PARF.forEach(r=>{if(r[0]!=='g'&&r[6]) VER[r[0]]=true;});
+  try{localStorage.setItem('dmc_hyd_ver',JSON.stringify(VER));}catch(e){}
+  buildParForm();
+};
+
+/* =========================================================
+   SỰ KIỆN (TƯƠNG TÁC SVG, CHU KỲ TỰ ĐỘNG, ĐO RÒ NHANH)
+   ========================================================= */
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected',x===t?'true':'false'));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===t.dataset.p));}));
+$('bStart').onclick=()=>{if(!S.estop&&!S.olTrip&&!S.km){S.km=true;S.kmT=S.t;S.startCmd=S.cmd.slice();}};
+$('bStop').onclick=()=>{stopAutoCycle();S.km=false;};
+$('bEstop').onclick=()=>{stopAutoCycle();S.estop=!S.estop; if(S.estop) S.km=false;};
+$('bOl').onclick=()=>{if(S.olTh<1.0) S.olTrip=false;};
+document.querySelectorAll('[data-knob]').forEach(b=>b.onclick=()=>{S.relSet=clamp(S.relSet+(+b.dataset.knob),10,250);});
+const pin=$('bPin');
+pin.addEventListener('pointerdown',e=>{S.ovrHold=true;pin.setPointerCapture(e.pointerId);});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>pin.addEventListener(ev,()=>{S.ovrHold=false;}));
+pin.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){S.ovrHold=true;e.preventDefault();}});
+pin.addEventListener('keyup',()=>{S.ovrHold=false;});
+$('cPinLock').onchange=e=>{S.ovrLock=e.target.checked;};
+$('cIso').onchange=e=>{S.iso=e.target.checked;};
+$('bAuto1').onclick=()=>startAutoCycle(0);
+$('bAuto2').onclick=()=>startAutoCycle(1);
+$('bAutoStop').onclick=()=>stopAutoCycle('Đã dừng chu kỳ');
+$('stations').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.lv!==undefined){stopAutoCycle();const i=+b.dataset.lv; S.cmd[i]=+b.dataset.d; S.cmdT[i]=S.t;}
+  if(b.dataset.ball!==undefined){const i=+b.dataset.ball; S.ball[i]=!S.ball[i]; framePre();}
+  if(b.dataset.gs!==undefined){S.gsel[+b.dataset.gs]=b.dataset.v;}
+  if(b.dataset.ms!==undefined){const i=+b.dataset.ms; S.mass[i]=clamp(S.mass[i]+(+b.dataset.d),0,1500);}
+});
+$('sch').addEventListener('click',e=>{
+  const tpEl=e.target.closest('[data-svg-tp]');
+  if(tpEl){selectTp(tpEl.dataset.svgTp);updatePanels();return;}
+  const actEl=e.target.closest('[data-svg-act]');
+  if(!actEl) return;
+  const p=actEl.dataset.svgAct.split(':');
+  if(p[0]==='lv'){stopAutoCycle();const i=+p[1], d=+p[2]; S.cmd[i]=(S.cmd[i]===d&&d!==0)?0:d; S.cmdT[i]=S.t;}
+  else if(p[0]==='ball'){const i=+p[1]; S.ball[i]=!S.ball[i]; framePre();}
+  else if(p[0]==='gs'){const i=+p[1]; S.gsel[i]=S.gsel[i]==='A'?'B':'A';}
+  else if(p[0]==='motor'){if(S.km){stopAutoCycle();S.km=false;}else if(!S.estop&&!S.olTrip){S.km=true;S.kmT=S.t;S.startCmd=S.cmd.slice();}}
+  else if(p[0]==='pin'){S.ovrLock=!S.ovrLock;$('cPinLock').checked=S.ovrLock;}
+  else if(p[0]==='iso'){S.iso=!S.iso;$('cIso').checked=S.iso;}
+  updatePanels();
+});
+document.querySelectorAll('[data-qtest]').forEach(btn=>btn.addEventListener('click',()=>{
+  stopAutoCycle();
+  const qt=btn.dataset.qtest;
+  if(!S.km&&!S.estop&&!S.olTrip){S.km=true;S.kmT=S.t;}
+  if(qt==='byp'){
+    const st=+btn.dataset.st;
+    S.ovrLock=false; $('cPinLock').checked=false;
+    S.ball=[true,true,true]; S.cmd=[0,0,0]; S.u=[0,0,0];
+    if(st===2){S.x[2]=0; S.v[2]=0; S.cmd[2]=-1; S.u[2]=-1;} else {S.x[st]=K.L; S.v[st]=0; S.cutDone[st]=true; S.cmd[st]=1; S.u[st]=1;} S.cmdT[st]=S.t;
+    framePre(); advance(0.18);
+  } else if(qt==='vlv'){
+    S.cmd=[0,0,0]; S.u=[0,0,0]; S.ball=[false,false,false];
+    S.ovrLock=true; $('cPinLock').checked=true;
+    framePre(); advance(0.18);
+  } else {
+    S.ovrLock=false; $('cPinLock').checked=false;
+    S.ball=[true,true,true]; S.cmd=[0,0,0]; S.u=[0,0,0];
+    framePre(); advance(0.1);
+  }
+  updatePanels();
+}));
+$('selT').onchange=e=>{PAR.sheetT=+e.target.value;derive();buildDerived();};
+$('selGrade').onchange=e=>{PAR.grade=e.target.value;derive();buildDerived();};
+$('selTp').onchange=e=>{selectTp(e.target.value);};
+$('bPeak').onclick=()=>{S.tpPeak=S.tpVal;S.tpMin=S.tpVal;};
+$('faultList').addEventListener('click',e=>{
+  const b=e.target.closest('.chip'); if(!b) return;
+  const k=b.dataset.f;
+  if(S.hidden&&!S.reveal){S.faults={};S.hidden=false;}
+  if(S.faults[k]) delete S.faults[k]; else S.faults[k]=true;
+  S.hidden=false; S.reveal=false;
+  if(k==='lowoil'){S.Vtank=(S.faults.lowoil?0.5:1)*PAR.oilL*1e-3;}
+  if(k==='p0off'&&S.faults.p0off&&S.gP0<40e5) S.gP0+=40e5;
+  framePre();
+});
+$('bSetupFault').onclick=()=>{
+  const act=FAULTS.filter(f=>S.faults[f.id]);
+  setupFaultPosture(act.length?act[0].id:null);
+  updatePanels();
+};
+$('bRand').onclick=()=>{stopExercise(); const f=FAULTS[Math.floor(Math.random()*FAULTS.length)];S.faults={};S.faults[f.id]=true;S.hidden=true;S.reveal=false;if(!S.km&&!S.estop&&!S.olTrip){S.km=true;S.kmT=S.t;}framePre();};
+$('bReveal').onclick=()=>{S.reveal=!S.reveal;};
+$('bClear').onclick=()=>{stopExercise(); stopAutoCycle(); S.faults={};S.hidden=false;S.reveal=false;S.Vleak=0;framePre();};
+$('bPause').onclick=()=>{S.paused=!S.paused;$('bPause').textContent=S.paused?'Chạy tiếp':'Tạm dừng';};
+function syncUI(){$('selTp').value=S.tp;$('cPinLock').checked=S.ovrLock;$('cIso').checked=S.iso;hist.p0=[];hist.relT=0;syncAutoUI();}
+$('bReset').onclick=()=>{stopAutoCycle();initState(true);if(EX.id)setupFaultPosture(EX.fault);framePre();syncUI();};
+$('bChartPause').onclick=()=>{CH.paused=!CH.paused;$('bChartPause').textContent=CH.paused?'Chạy đồ thị':'Dừng đồ thị';};
+$('bSaveRef').onclick=()=>{
+  if(CH.t.length<2) return;
+  const t0=CH.t[0];
+  CH.ref={dt:CH.t.map(t=>t-t0),s:CH.s.map(a=>a.slice())};
+  $('bClearRef').style.display='';
+  $('bSaveRef').textContent='📌 Cập nhật chuẩn';
+};
+$('bClearRef').onclick=()=>{
+  CH.ref=null;
+  $('bClearRef').style.display='none';
+  $('bSaveRef').textContent='📌 Lưu đường chuẩn';
+};
+$('selChartSt').onchange=()=>{CH.t=[];CH.s=CH.s.map(()=>[]);CH.lastT=-1;};
+$('bApply').onclick=()=>{
+  document.querySelectorAll('[data-par]').forEach(el=>{const k=el.dataset.par; const nv=el.tagName==='SELECT'?el.value:+el.value; PAR[k]=nv;});
+  if(['VG32','VG46','VG68'].indexOf(PAR.oil)<0) PAR.oil='VG46';
+  try{localStorage.setItem('dmc_hyd_par',JSON.stringify(PAR));localStorage.setItem('dmc_hyd_ver',JSON.stringify(VER));}catch(e){}
+  buildParForm(); derive(); buildDerived(); initState(true); framePre(); syncUI();
+  $('selT').value=PAR.sheetT.toFixed(2); $('selGrade').value=PAR.grade;
+};
+$('bDefault').onclick=()=>{PAR=Object.assign({},DEF);VER={};try{localStorage.removeItem('dmc_hyd_par');localStorage.removeItem('dmc_hyd_ver');}catch(e){} buildParForm(); derive(); buildDerived(); initState(true); framePre(); syncUI();};
+
+/* =========================================================
+   VÒNG LẶP
+   ========================================================= */
+const DT=1e-4;
+let lastT=performance.now(), symT=0;
+function advance(simSec){
+  const therm=+$('selTherm').value;
+  const n=Math.max(1,Math.round(simSec/DT));
+  for(let k=0;k<n;k++){ if(k%50===0){framePre();stepAuto();} step(DT,DT*therm); }
+}
+function loop(now){
+  let dtf=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  if(!S.paused){ advance(dtf*(+$('selSpeed').value)); chartPush(); huntSample(dtf*(+$('selSpeed').value)); }
+  render(dtf); chartDraw();
+  symT+=dtf; if(symT>0.25){symT=0;symptoms();}
+  requestAnimationFrame(loop);
+}
+framePre();
+$('selT').value=PAR.sheetT.toFixed(2); $('selGrade').value=PAR.grade;
+requestAnimationFrame(loop);
+window.SIM={derive,get S(){return S;},Pn,K,PAR,VER,get EX(){return EX;},get AUTO(){return AUTO;},CH,startExercise,stopExercise,startAutoCycle,stopAutoCycle,setupFaultPosture,selectTp,advance,step,framePre,BAR,LPM,iAV,iBV,iAC,iBC};
+
+/* ================= MOBILE v4: zoom sơ đồ + thanh nhanh (không chạm lõi vật lý/tính năng v4) ================= */
+(function(){
+  var box=$('svgbox'), svg=$('sch'); if(!box||!svg) return;
+  var ZOOMS=[560,760,1000,1320,1700], zi=1, fit=true;
+  var CX=[330,660,990]; // tâm XL1/XL2/XL3 trong viewBox 1320
+  function applyZoom(){
+    if(fit){ svg.style.minWidth=''; }
+    else { svg.style.minWidth=ZOOMS[zi]+'px'; }
+    var f=$('zFit'); if(f) f.classList.toggle('on', fit);
+  }
+  function setZoom(d){
+    if(fit && d>0){ fit=false; zi=1; }
+    zi=Math.max(0,Math.min(ZOOMS.length-1, zi+d));
+    if(zi===1 && d<0){ fit=true; }
+    applyZoom();
+  }
+  function focusStation(i){
+    if(fit){ fit=false; zi=2; applyZoom(); }
+    requestAnimationFrame(function(){
+      var w=box.scrollWidth, bw=box.clientWidth;
+      var left=(CX[i]/1320)*w - bw/2;
+      box.scrollTo({left:Math.max(0,left), behavior:'smooth'});
+    });
+  }
+  var zo=$('zOut'), zin=$('zIn'), zf=$('zFit'), za=$('zAll');
+  if(zo) zo.onclick=function(){ setZoom(-1); };
+  if(zin) zin.onclick=function(){ setZoom(1); };
+  if(zf) zf.onclick=function(){ fit=true; applyZoom(); box.scrollTo({left:0,behavior:'smooth'}); };
+  if(za) za.onclick=function(){ fit=false; zi=3; applyZoom(); box.scrollTo({left:0,behavior:'smooth'}); };
+  document.querySelectorAll('[data-focus]').forEach(function(b){
+    b.onclick=function(){ focusStation(+b.dataset.focus); };
+  });
+  if(window.matchMedia && window.matchMedia('(max-width: 768px)').matches){ fit=false; zi=1; }
+  applyZoom();
+  var mP0=$('mP0'), mStart=$('mStart'), mOp=$('mOp'), mEstop=$('mEstop');
+  if(mStart) mStart.onclick=function(){ var b=$('bStart'); if(b) b.click(); };
+  if(mEstop) mEstop.onclick=function(){ var b=$('bEstop'); if(b) b.click(); };
+  if(mOp) mOp.onclick=function(){
+    document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected', x.dataset.p==='pOp'?'true':'false'); });
+    document.querySelectorAll('.pane').forEach(function(p){ p.classList.toggle('on', p.id==='pOp'); });
+    var r=document.querySelector('.right'); if(r) r.scrollIntoView({behavior:'smooth', block:'start'});
+  };
+  if(mP0) setInterval(function(){
+    try{
+      var S=window.SIM && window.SIM.S; if(!S) return;
+      mP0.textContent=Math.round(S.gP0/1e5)+' bar';
+      if(mStart){ mStart.textContent=S.estop?'Đã dừng khẩn':(S.km?'Đang chạy':'Khởi động'); mStart.classList.toggle('on', !!S.km && !S.estop); }
+      if(mEstop) mEstop.textContent=S.estop?'NHẢ DỪNG KHẨN':'DỪNG KHẨN';
+    }catch(e){}
+  }, 300);
+})();
+
+</script>
+</body>
+</html>
