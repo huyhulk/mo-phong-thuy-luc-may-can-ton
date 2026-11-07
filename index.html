@@ -2,9 +2,8 @@
 <html lang="vi">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17202B">
-<title>Mô phỏng trạm thủy lực máy cán tôn · bản mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mô phỏng trạm thủy lực máy cán tôn</title>
 <style>
 :root{
   --bg:#F3F4F2; --panel:#FFFFFF; --ink:#17202B; --muted:#4A5561; --line:#D6DADF; --soft:#EEF0F2;
@@ -110,76 +109,55 @@ select.inp{min-height:32px;border:1px solid #C9CED4;border-radius:5px;padding:2p
 .meas-bad{font-weight:700;color:#9C2318;background:#FBE9E7;padding:1px 5px;border-radius:4px}
 @media (max-width:1250px){.app{grid-template-columns:1fr;grid-template-rows:auto auto auto;height:auto}.right{border-left:0;border-top:1px solid var(--line)}header{grid-column:1}}
 
-/* ================= BẢN MOBILE v4 (chỉ giao diện, không đổi lõi vật lý và tính năng v4) ================= */
-html,body{overflow-x:hidden}
-button,input,select{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.svgtools{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
-.svgtools .lbl{font-size:12px;font-weight:700;color:var(--muted);margin-right:2px}
-.svgtools .b{min-height:34px}
-.svgtools .b.on{background:var(--blu);border-color:var(--blu);color:#fff}
-.svgbox{overflow:auto;-webkit-overflow-scrolling:touch;touch-action:pan-x pan-y;overscroll-behavior:contain}
-.svgbox svg{max-width:none}
-.mbar{display:none}
-@media (max-width:1250px){
-  .app{grid-template-columns:1fr}
-  .svgbox{max-height:62vh}
-}
-@media (max-width:768px){
-  body{font-size:14px}
-  header{padding:10px 12px;gap:8px}
-  header h1{font-size:15px;line-height:1.35}
-  header label.muted{flex:1 1 46%}
-  header select.inp{width:100%}
-  .left{padding:8px 8px 12px}
-  .right .pane{padding:8px}
-  .card{padding:10px}
-  .b{min-height:44px;padding:0 14px}
-  .b.sm{min-height:40px;padding:0 12px}
-  .tab{padding:12px 14px;font-size:14px}
-  .tabs{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
-  .tabs .tab{flex:0 0 auto}
-  select.inp{min-height:44px}
-  .form input,.form select{min-height:44px;font-size:16px}
-  .form{grid-template-columns:minmax(0,1fr) 64px}
-  .form label{grid-column:1/3}
-  .form .gt{grid-column:1/3}
-  .kv{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .tile .v{font-size:16px}
-  .chips{grid-template-columns:minmax(0,1fr)}
-  .chip{min-height:44px;padding:8px 10px;font-size:13px}
-  .card{overflow-x:auto}
-  table.t,table.g{min-width:560px}
-  table.t th,table.t td,table.g th,table.g td{font-size:12.5px}
-  .chartbox canvas{height:180px}
-  .symbox h3,.card h3{font-size:15px}
-  /* tính năng mới của v4 */
-  .ex-grid{grid-template-columns:minmax(0,1fr)}
-  .ex-btn{min-height:44px;padding:10px 12px}
-  .ex-banner{margin:8px 8px 0;padding:10px}
-  .chk-item{min-height:44px;padding:8px 10px}
-  .chk-item input[type="checkbox"]{width:20px;height:20px}
-  .cal-grid{grid-template-columns:minmax(0,1fr) 64px}
-  .cal-grid label{grid-column:1/3}
-  .cal-grid input{min-height:44px;font-size:16px}
-  .info-box,.warn-box{font-size:13px}
-  body{padding-bottom:calc(64px + env(safe-area-inset-bottom,0px))}
-  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:50;
-    align-items:center;gap:8px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));
-    background:rgba(23,32,43,.97);color:#fff;box-shadow:0 -2px 12px rgba(0,0,0,.25)}
-  .mbar .p0{flex:0 0 auto;font-family:Consolas,monospace;font-size:13px;line-height:1.2;text-align:center}
-  .mbar .p0 b{display:block;font-size:17px}
-  .mbar .b{flex:1 1 0;min-height:44px;border-color:rgba(255,255,255,.4);background:rgba(255,255,255,.08);color:#fff}
-  .mbar .b.green{background:var(--grn);border-color:var(--grn)}
-  .mbar .b.red{background:var(--red);border-color:var(--red)}
-  .mbar .b.on{background:#fff;color:#17202B}
-}
-@media (max-width:380px){
-  .kv{grid-template-columns:minmax(0,1fr)}
-  header label.muted{flex:1 1 100%}
-}
-@media (pointer:coarse) and (min-width:769px){
-  .b{min-height:40px}
+/* ===== Điều khiển phóng to sơ đồ ===== */
+.svgbox{position:relative}
+.zctl{position:absolute;right:8px;top:8px;display:flex;flex-direction:column;gap:6px;z-index:3}
+.zctl button,.zjump button{border:1px solid #C9CED4;background:rgba(255,255,255,.94);color:#17202B;font:inherit;font-weight:700;cursor:pointer;border-radius:8px}
+.zctl button{width:38px;height:38px;font-size:18px;line-height:1}
+.zjump{position:absolute;left:8px;bottom:8px;display:flex;gap:6px;flex-wrap:wrap;z-index:3;max-width:calc(100% - 60px)}
+.zjump button{height:32px;padding:0 10px;font-size:12px}
+.zctl button:focus-visible,.zjump button:focus-visible{outline:2px solid #2C68B0;outline-offset:1px}
+.mob-only{display:none!important}
+.lt-s{display:none}
+/* ===== Điện thoại: nửa trên sơ đồ cố định, nửa dưới các tab ===== */
+@media (max-width:900px), (pointer:coarse) and (max-height:520px){
+  html,body{height:100%;overflow:hidden}
+  .app{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:50% auto minmax(0,1fr);height:100%}
+  .left{grid-row:1;grid-column:1;overflow:hidden;padding:6px max(8px,env(safe-area-inset-right,0px)) 4px max(8px,env(safe-area-inset-left,0px));display:block;min-height:0}
+  .svgbox{height:100%;padding:0;border-radius:8px;overflow:hidden}
+  svg#sch{width:100%;height:100%;touch-action:none;-webkit-user-select:none;user-select:none}
+  header{grid-row:2;grid-column:1;padding:6px max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));gap:6px 10px;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  header h1,header .sp{display:none}
+  header{flex-wrap:nowrap;overflow-x:auto;padding-top:4px;padding-bottom:4px}
+  header .clock{white-space:nowrap;font-size:11px}
+  header label{font-size:11px;white-space:nowrap;display:flex;align-items:center;gap:4px}
+  .lt-l{display:none}.lt-s{display:inline}
+  header .inp{min-height:30px;font-size:12px;padding:1px 2px}
+  header .b.sm{min-height:30px;padding:0 8px;white-space:nowrap}
+  .tabs{flex:0 0 auto;flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;padding-top:4px;-webkit-overflow-scrolling:touch}
+  .tab{white-space:nowrap;flex:0 0 auto}
+  .zjump{gap:4px;bottom:6px;left:6px}
+  .zjump button{height:28px;padding:0 8px;font-size:11px}
+  .zctl{top:6px;right:6px;gap:4px}
+  .zctl button{width:34px;height:34px;font-size:17px}
+  .right{grid-row:3;grid-column:1;overflow:auto;-webkit-overflow-scrolling:touch;border-left:0;border-top:0;min-height:0}
+  .pane{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .tab{padding:9px 10px}
+  .mob-only{display:inline-flex!important}
+  .b{min-height:42px}
   .b.sm{min-height:36px}
+  .kv{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .chips{grid-template-columns:1fr}
+  .form{grid-template-columns:minmax(0,1fr) 96px 40px}
+  table.t,table.g{display:block;overflow-x:auto}
+  .chartbox canvas{height:180px}
+}
+@media (pointer:coarse) and (max-height:520px) and (orientation:landscape){
+  .app{grid-template-columns:56% 44%;grid-template-rows:auto minmax(0,1fr)}
+  .left{grid-column:1;grid-row:1 / 3}
+  header{grid-column:2;grid-row:1}
+  .right{grid-column:2;grid-row:2;border-left:1px solid var(--line)}
+  .zjump{display:none}
 }
 </style>
 </head>
@@ -189,27 +167,19 @@ button,input,select{-webkit-tap-highlight-color:transparent;touch-action:manipul
   <h1>Mô phỏng trạm thủy lực máy cán tôn · 1 bơm · DBW · 3 van 4/3 · 3 xi lanh</h1>
   <span class="sp"></span>
   <span class="clock mono" id="clock">t = 0,0 s</span>
-  <label class="muted">Tốc độ thủy lực
+  <label class="muted"><span class="lt-l">Tốc độ thủy lực</span><span class="lt-s">Thủy lực</span>
     <select id="selSpeed" class="inp"><option value="0.1">×0,1 (chậm)</option><option value="0.25">×0,25</option><option value="1" selected>×1 thực</option></select></label>
-  <label class="muted">Thời gian nhiệt
+  <label class="muted"><span class="lt-l">Thời gian nhiệt</span><span class="lt-s">Nhiệt</span>
     <select id="selTherm" class="inp"><option value="1">×1 thực</option><option value="30" selected>×30</option><option value="120">×120</option><option value="600">×600</option></select></label>
   <button class="b sm" id="bPause">Tạm dừng</button>
   <button class="b sm" id="bReset">Đặt lại</button>
 </header>
 
 <div class="left">
-  <div class="svgbox" id="svgbox">
-  <div class="svgtools" role="group" aria-label="Thu phóng sơ đồ">
-    <span class="lbl">Sơ đồ:</span>
-    <button class="b sm" id="zOut" type="button" aria-label="Thu nhỏ sơ đồ">−</button>
-    <button class="b sm" id="zIn" type="button" aria-label="Phóng to sơ đồ">+</button>
-    <button class="b sm" id="zFit" type="button">Vừa màn hình</button>
-    <button class="b sm" id="zAll" type="button">Toàn cảnh</button>
-    <button class="b sm" data-focus="0" type="button">XL1</button>
-    <button class="b sm" data-focus="1" type="button">XL2</button>
-    <button class="b sm" data-focus="2" type="button">XL3</button>
+  <div class="svgbox" id="svgbox"><svg id="sch" viewBox="0 0 1320 940" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Sơ đồ thủy lực trạm máy cán"></svg>
+    <div class="zctl"><button type="button" id="zIn" aria-label="Phóng to sơ đồ">+</button><button type="button" id="zOut" aria-label="Thu nhỏ sơ đồ">−</button></div>
+    <div class="zjump"><button type="button" data-zv="all">Toàn bộ</button><button type="button" data-zv="cyl">Xi lanh</button><button type="button" data-zv="vlv">Van</button><button type="button" data-zv="pwr">Nguồn</button></div>
   </div>
-  <svg id="sch" viewBox="0 0 1320 940" role="img" aria-label="Sơ đồ thủy lực trạm máy cán"></svg></div>
   <div class="legend" id="legend"></div>
   <div class="chartbox">
     <div class="row" style="justify-content:space-between">
@@ -230,6 +200,7 @@ button,input,select{-webkit-tap-highlight-color:transparent;touch-action:manipul
 <div class="right">
   <div class="tabs" role="tablist">
     <button class="tab" role="tab" aria-selected="true" data-p="pOp">Vận hành</button>
+    <button class="tab mob-only" role="tab" aria-selected="false" data-p="pMon">Theo dõi</button>
     <button class="tab" role="tab" aria-selected="false" data-p="pMeas">Đo kiểm</button>
     <button class="tab" role="tab" aria-selected="false" data-p="pFault">Khoanh vùng &amp; Lỗi</button>
     <button class="tab" role="tab" aria-selected="false" data-p="pPar">Thông số</button>
@@ -299,6 +270,7 @@ button,input,select{-webkit-tap-highlight-color:transparent;touch-action:manipul
     </section>
   </div>
 
+  <div class="pane" id="pMon"></div>
   <div class="pane" id="pMeas">
     <section class="card"><h3>Đồng hồ &amp; cảm biến trên máy</h3><div class="kv" id="measKv"></div></section>
     <section class="card">
@@ -461,14 +433,6 @@ button,input,select{-webkit-tap-highlight-color:transparent;touch-action:manipul
     <section class="card"><h3>Bảng lỗi: triệu chứng → kiểm tra xác nhận → xử lý</h3><table class="g" id="diagTable"></table></section>
   </div>
 </div>
-</div>
-
-
-<div class="mbar" role="group" aria-label="Điều khiển nhanh">
-  <span class="p0">P0<b id="mP0">—</b></span>
-  <button class="b green" id="mStart" type="button">Khởi động</button>
-  <button class="b" id="mOp" type="button">Vận hành</button>
-  <button class="b red" id="mEstop" type="button">DỪNG KHẨN</button>
 </div>
 
 <script>
@@ -1345,7 +1309,7 @@ function chartDraw(){
   const cv=$('chart'), dpr=window.devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
   if(w<10||h<10) return;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr);}
-  const c=cv.getContext('2d'); if(!c) return; c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,h);
+  const c=cv.getContext('2d'); c.setTransform(dpr,0,0,dpr,0,0); c.clearRect(0,0,w,h);
   const L=40,Rm=40,T=8,B=20, W=w-L-Rm, H=h-T-B;
   let maxP=40; CH.s.slice(0,5).forEach(a=>a.forEach(x=>{if(x>maxP)maxP=x;}));
   if(CH.ref) CH.ref.s.slice(0,5).forEach(a=>a.forEach(x=>{if(x>maxP)maxP=x;}));
@@ -1740,61 +1704,55 @@ function loop(now){
 }
 framePre();
 $('selT').value=PAR.sheetT.toFixed(2); $('selGrade').value=PAR.grade;
+
+/* =========================================================
+   PHÓNG TO / KÉO SƠ ĐỒ + BỐ CỤC ĐIỆN THOẠI
+   ========================================================= */
+const VB0={x:0,y:0,w:1320,h:940}; let VB=Object.assign({},VB0);
+const ZV={all:[0,0,1320,940],cyl:[150,0,1000,480],vlv:[180,360,1040,330],pwr:[0,630,860,310]};
+function setVB(v){
+  const w=clamp(v.w,200,1320), h=w*940/1320;
+  VB={w:w,h:h,x:clamp(v.x,-200,1320-w+200),y:clamp(v.y,-150,940-h+150)};
+  if(w>=1319){VB=Object.assign({},VB0);}
+  $('sch').setAttribute('viewBox',VB.x.toFixed(1)+' '+VB.y.toFixed(1)+' '+VB.w.toFixed(1)+' '+VB.h.toFixed(1));
+}
+function zoomAt(f,cx,cy){ // cx,cy: tọa độ sơ đồ
+  const w=clamp(VB.w*f,200,1320), k=w/VB.w;
+  setVB({x:cx-(cx-VB.x)*k,y:cy-(cy-VB.y)*k,w:w});
+}
+function svgScale(){const sv=$('sch'),cw=sv.clientWidth||1,ch=sv.clientHeight||1;return Math.max(VB.w/cw,VB.h/ch);}
+function toSvg(px,py){const sv=$('sch'),r=sv.getBoundingClientRect(),sc=svgScale();const ox=(r.width*sc-VB.w)/2,oy=(r.height*sc-VB.h)/2;return [VB.x+(px-r.left)*sc-ox,VB.y+(py-r.top)*sc-oy];}
+$('zIn').onclick=()=>zoomAt(0.7,VB.x+VB.w/2,VB.y+VB.h/2);
+$('zOut').onclick=()=>zoomAt(1/0.7,VB.x+VB.w/2,VB.y+VB.h/2);
+document.querySelectorAll('[data-zv]').forEach(b=>b.onclick=()=>{const z=ZV[b.dataset.zv];setVB({x:z[0],y:z[1],w:z[2]});});
+(function(){
+  const sv=$('sch'), pts=new Map(); let moved=0, last=null, pinch=null;
+  sv.addEventListener('pointerdown',e=>{pts.set(e.pointerId,[e.clientX,e.clientY]); if(pts.size===1){moved=0;last=[e.clientX,e.clientY];} if(pts.size===2){const a=[...pts.values()];pinch={d:Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]),w:VB.w};}});
+  sv.addEventListener('pointermove',e=>{
+    if(!pts.has(e.pointerId)) return; pts.set(e.pointerId,[e.clientX,e.clientY]);
+    if(pts.size===2&&pinch){const a=[...pts.values()];const d=Math.hypot(a[0][0]-a[1][0],a[0][1]-a[1][1]);const m=toSvg((a[0][0]+a[1][0])/2,(a[0][1]+a[1][1])/2);zoomAt(clamp(pinch.w*pinch.d/Math.max(20,d),200,1320)/VB.w,m[0],m[1]);moved=99;return;}
+    if(pts.size===1&&last&&e.pointerType!=='mouse'||(pts.size===1&&last&&e.buttons===1&&VB.w<1319)){const sc=svgScale();const dx=e.clientX-last[0],dy=e.clientY-last[1];moved+=Math.abs(dx)+Math.abs(dy);if(VB.w<1319) setVB({x:VB.x-dx*sc,y:VB.y-dy*sc,w:VB.w});last=[e.clientX,e.clientY];}
+  });
+  const up=e=>{pts.delete(e.pointerId); if(pts.size<2) pinch=null; if(pts.size===1){last=[...pts.values()][0];} if(pts.size===0) last=null;};
+  ['pointerup','pointercancel','pointerleave'].forEach(t=>sv.addEventListener(t,up));
+  sv.addEventListener('click',e=>{if(moved>8){e.stopPropagation();e.preventDefault();} moved=0;},true);
+})();
+const MQ=window.matchMedia('(max-width:900px), (pointer:coarse) and (max-height:520px)');
+function applyLayout(){
+  const mob=MQ.matches, left=document.querySelector('.left'), mon=$('pMon');
+  const parts=[$('legend'),document.querySelector('.chartbox'),document.querySelector('.symbox')];
+  if(mob){ parts.forEach(el=>{if(el&&el.parentNode!==mon) mon.appendChild(el);}); }
+  else{
+    parts.forEach(el=>{if(el&&el.parentNode!==left) left.appendChild(el);});
+    const t=document.querySelector('.tab[data-p="pMon"]');
+    if(t&&t.getAttribute('aria-selected')==='true') document.querySelector('.tab[data-p="pOp"]').click();
+    setVB(VB0);
+  }
+}
+if(MQ.addEventListener) MQ.addEventListener('change',applyLayout); else if(MQ.addListener) MQ.addListener(applyLayout);
+applyLayout();
 requestAnimationFrame(loop);
 window.SIM={derive,get S(){return S;},Pn,K,PAR,VER,get EX(){return EX;},get AUTO(){return AUTO;},CH,startExercise,stopExercise,startAutoCycle,stopAutoCycle,setupFaultPosture,selectTp,advance,step,framePre,BAR,LPM,iAV,iBV,iAC,iBC};
-
-/* ================= MOBILE v4: zoom sơ đồ + thanh nhanh (không chạm lõi vật lý/tính năng v4) ================= */
-(function(){
-  var box=$('svgbox'), svg=$('sch'); if(!box||!svg) return;
-  var ZOOMS=[560,760,1000,1320,1700], zi=1, fit=true;
-  var CX=[330,660,990]; // tâm XL1/XL2/XL3 trong viewBox 1320
-  function applyZoom(){
-    if(fit){ svg.style.minWidth=''; }
-    else { svg.style.minWidth=ZOOMS[zi]+'px'; }
-    var f=$('zFit'); if(f) f.classList.toggle('on', fit);
-  }
-  function setZoom(d){
-    if(fit && d>0){ fit=false; zi=1; }
-    zi=Math.max(0,Math.min(ZOOMS.length-1, zi+d));
-    if(zi===1 && d<0){ fit=true; }
-    applyZoom();
-  }
-  function focusStation(i){
-    if(fit){ fit=false; zi=2; applyZoom(); }
-    requestAnimationFrame(function(){
-      var w=box.scrollWidth, bw=box.clientWidth;
-      var left=(CX[i]/1320)*w - bw/2;
-      box.scrollTo({left:Math.max(0,left), behavior:'smooth'});
-    });
-  }
-  var zo=$('zOut'), zin=$('zIn'), zf=$('zFit'), za=$('zAll');
-  if(zo) zo.onclick=function(){ setZoom(-1); };
-  if(zin) zin.onclick=function(){ setZoom(1); };
-  if(zf) zf.onclick=function(){ fit=true; applyZoom(); box.scrollTo({left:0,behavior:'smooth'}); };
-  if(za) za.onclick=function(){ fit=false; zi=3; applyZoom(); box.scrollTo({left:0,behavior:'smooth'}); };
-  document.querySelectorAll('[data-focus]').forEach(function(b){
-    b.onclick=function(){ focusStation(+b.dataset.focus); };
-  });
-  if(window.matchMedia && window.matchMedia('(max-width: 768px)').matches){ fit=false; zi=1; }
-  applyZoom();
-  var mP0=$('mP0'), mStart=$('mStart'), mOp=$('mOp'), mEstop=$('mEstop');
-  if(mStart) mStart.onclick=function(){ var b=$('bStart'); if(b) b.click(); };
-  if(mEstop) mEstop.onclick=function(){ var b=$('bEstop'); if(b) b.click(); };
-  if(mOp) mOp.onclick=function(){
-    document.querySelectorAll('.tab').forEach(function(x){ x.setAttribute('aria-selected', x.dataset.p==='pOp'?'true':'false'); });
-    document.querySelectorAll('.pane').forEach(function(p){ p.classList.toggle('on', p.id==='pOp'); });
-    var r=document.querySelector('.right'); if(r) r.scrollIntoView({behavior:'smooth', block:'start'});
-  };
-  if(mP0) setInterval(function(){
-    try{
-      var S=window.SIM && window.SIM.S; if(!S) return;
-      mP0.textContent=Math.round(S.gP0/1e5)+' bar';
-      if(mStart){ mStart.textContent=S.estop?'Đã dừng khẩn':(S.km?'Đang chạy':'Khởi động'); mStart.classList.toggle('on', !!S.km && !S.estop); }
-      if(mEstop) mEstop.textContent=S.estop?'NHẢ DỪNG KHẨN':'DỪNG KHẨN';
-    }catch(e){}
-  }, 300);
-})();
-
 </script>
 </body>
 </html>
